@@ -45,7 +45,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="title">LAPORAN DATA PARKIR KELUAR</div>
+        <div class="title">LAPORAN DATA PARKIR KELUAR HOTEL GOLDEN HILL</div>
         <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('MMMM Y') }}</div>
     </div>
 

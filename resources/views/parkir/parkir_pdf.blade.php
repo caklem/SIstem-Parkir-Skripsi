@@ -1,34 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Data Parkir masuk{{ \Carbon\Carbon::now()->format('F-Y') }}</title>
+    <title>Laporan Data Parkir masuk {{ \Carbon\Carbon::now()->format('F-Y') }}</title>
     <style>
+        @page {
+            margin: 0.5cm 1cm;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: DejaVu Sans, sans-serif;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #666;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid black;
+            margin: 20px 0;
+            font-size: 12px;
         }
         th, td {
+            border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
         th {
-            background-color: #f4f4f4;
+            background-color: #f8f9fa;
         }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-    <h1>Laporan Data Parkir Golden Hill {{\Carbon\Carbon::now()->locale('id')->isoFormat('MMMM-Y')}}</h1>
+    <div class="header">
+        <div class="title">LAPORAN DATA PARKIR MASUK HOTEL GOLDEN HILL </div>
+        <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->format('F Y') }}
+    </div>
     <table>
         <thead>
             <tr>

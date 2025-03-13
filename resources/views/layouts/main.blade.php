@@ -119,9 +119,41 @@
                 margin-bottom: 0.5rem;
             }
         }
+
+        /* Perbaikan sidebar behavior */
+        @media (min-width: 992px) {
+            .sidebar-mini.sidebar-collapse .main-sidebar {
+                width: 4.6rem;
+            }
+            
+            .sidebar-mini.sidebar-collapse .content-wrapper {
+                margin-left: 4.6rem;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .main-sidebar {
+                width: 250px;
+                margin-left: -250px;
+            }
+
+            .sidebar-open .main-sidebar {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* Improve transition */
+        .main-sidebar, 
+        .content-wrapper {
+            transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+        }
     </style>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="sidebar-mini layout-fixed">
     <div class="wrapper">
         <!-- Navbar -->
         {{-- @include('layouts.navbar') --}}

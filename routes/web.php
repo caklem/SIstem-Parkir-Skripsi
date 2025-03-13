@@ -18,10 +18,13 @@ Route::prefix('parkir')->group(function () {
     Route::get('/keluar/{id}/edit', [ParkirController::class, 'editKeluar'])->name('parkir.keluar.edit');
     Route::put('/keluar/{id}', [ParkirController::class, 'updateKeluar'])->name('parkir.keluar.update');
     Route::get('/keluar/cetak-pdf', [ParkirController::class, 'cetakPdfKeluar'])->name('parkir.keluar.cetak-pdf'); // Route untuk PDF parkir keluar
+    Route::get('/parkir/keluar/search', [ParkirController::class, 'searchParkirKeluar'])->name('parkir.keluar.search');
 
     // PDF Routes
     Route::get('/masuk/cetak-pdf', [ParkirController::class, 'cetakPdfMasuk'])->name('parkir.masuk.cetak-pdf');
     Route::get('/keluar/cetak-pdf', [ParkirController::class, 'cetakPdfKeluar'])->name('parkir.keluar.cetak-pdf');
+    Route::get('/parkir/cetak-pdf-masuk', [ParkirController::class, 'cetakPdfMasuk'])->name('parkir.cetak-pdf-masuk');
+    Route::get('/parkir/cetak-pdf-keluar', [ParkirController::class, 'cetakPdfKeluar'])->name('parkir.cetak-pdf-keluar');
 
     // Basic CRUD routes
     Route::get('/', [ParkirController::class, 'index'])->name('parkir.index');

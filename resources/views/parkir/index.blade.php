@@ -128,12 +128,12 @@
                             <span class="d-none d-md-inline">Tambah Data</span>
                             <span class="d-inline d-md-none">Tambah</span>
                         </button>
-                        <a href="{{ route('parkir.cetak-pdf') }}" class="btn btn-danger btn-sm btn-md-normal">
+                        <a href="{{ route('parkir.cetak-pdf-masuk') }}" class="btn btn-danger btn-sm btn-md-normal">
                             <i class="bi bi-file-pdf me-1"></i>
                             <span class="d-none d-md-inline">Export PDF</span>
                             <span class="d-inline d-md-none">PDF</span>
                         </a>
-                    </div>
+                    </div>  
                 </div>
             </div>
             <div class="card-body">
@@ -150,7 +150,7 @@
                 <!-- Search Box -->
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <form action="{{ route('parkir.index') }}" method="GET" class="position-relative">
+                        <form action="{{ route('parkir.index') }}" method="GET" class="position-relative" id="searchForm">
                             <div class="input-group">
                                 <span class="input-group-text bg-light">
                                     <i class="bi bi-search"></i>
@@ -160,12 +160,17 @@
                                        name="search" 
                                        class="form-control" 
                                        placeholder="Cari nomor kartu atau jenis kendaraan..." 
-                                       value="{{ request('search') }}">
+                                       value="{{ request('search') }}"
+                                       autocomplete="off">
+                                    @if(request('search'))
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSearch">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    @endif
                             </div>
                         </form>
                     </div>
                 </div>
-
                 <!-- Table -->
                 <div class="table-responsive">
                     <table class="table table-hover align-middle" id="dataTable">
@@ -655,4 +660,98 @@
         });
     });
 </script>
+
+<script>
+$(document).ready(function() {
+    // Variabel untuk menyimpan timeout
+    let searchTimeout;
+
+    // Handle input pencarian dengan debounce
+    $('#search').on('input', function() {
+        clearTimeout(searchTimeout);
+        
+        searchTimeout = setTimeout(() => {
+            $('#searchForm').submit();
+        }, 500); // Tunggu 500ms setelah user selesai mengetik
+    });
+
+    // Handle clear search
+    $('#clearSearch').on('click', function() {
+        $('#search').val('');
+        window.location.href = "{{ route('parkir.index') }}";
+    });
+
+    // Highlight hasil pencarian
+    function highlightSearch() {
+        let searchText = "{{ request('search') }}";
+        if (searchText) {
+            let searchRegex = new RegExp(searchText, 'gi');
+            $('td').each(function() {
+                let text = $(this).text();
+                if (text.match(searchRegex)) {
+                    $(this).html(text.replace(searchRegex, match => 
+                        `<span class="highlight">${match}</span>`
+                    ));
+                }
+            });
+        }
+    }
+
+    // Panggil fungsi highlight saat halaman dimuat
+    highlightSearch();
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+    /* Highlight style untuk hasil pencarian */
+    .highlight {
+        background-color: #fff3cd;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    /* Loading indicator style */
+    .search-loading {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: none;
+    }
+
+    /* Clear button style */
+    #clearSearch {
+        border: none;
+        background: transparent;
+        padding: 0.375rem 0.75rem;
+    }
+
+    #clearSearch:hover {
+        color: #dc3545;
+    }
+
+    /* Improve input group appearance */
+    .input-group {
+        border-radius: 0.375rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .input-group-text {
+        border: none;
+        background-color: #f8f9fa;
+    }
+
+    .form-control {
+        border: none;
+        box-shadow: none;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        background-color: #fff;
+    }
+</style>
 @endpush

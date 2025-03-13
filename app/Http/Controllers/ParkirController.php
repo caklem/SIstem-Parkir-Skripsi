@@ -19,10 +19,32 @@ class ParkirController extends Controller
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    public function index()
+    public function index(Request $request)
     {
-        $parkirs = Parkir::orderBy('waktu_masuk', 'desc')->get();
-        return view('parkir.index', compact('parkirs'));
+        try {
+            $query = Parkir::query();
+            
+            // Jika ada parameter pencarian
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('nomor_kartu', 'LIKE', "%{$search}%")
+                      ->orWhere('plat_nomor', 'LIKE', "%{$search}%")
+                      ->orWhere('jenis_kendaraan', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $parkirs = $query->orderBy('waktu_masuk', 'desc')->get();
+            
+            return view('parkir.index', compact('parkirs'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error in Parkir Index:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return back()->with('error', 'Terjadi kesalahan sistem');
+        }
     }
 
     public function store(Request $request)
@@ -319,14 +341,25 @@ class ParkirController extends Controller
         }
     }
 
-    public function keluarIndex()
+    public function keluarIndex(Request $request)
     {
         try {
-            // Get active parkirs and parkir keluar data
-            $parkirs = Parkir::orderBy('waktu_masuk', 'desc')->get();
-            $parkirKeluar = ParkirKeluar::orderBy('waktu_keluar', 'desc')->get();
+            $query = ParkirKeluar::query();
+            
+            // Jika ada parameter pencarian
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('nomor_kartu', 'LIKE', "%{$search}%")
+                      ->orWhere('plat_nomor', 'LIKE', "%{$search}%")
+                      ->orWhere('jenis_kendaraan', 'LIKE', "%{$search}%");
+                });
+            }
 
-            // Format dates for display
+            $parkirs = Parkir::orderBy('waktu_masuk', 'desc')->get();
+            $parkirKeluar = $query->orderBy('waktu_keluar', 'desc')->get();
+
+            // Format dates
             $parkirKeluar->transform(function ($item) {
                 $item->waktu_masuk_formatted = Carbon::parse($item->waktu_masuk)->format('d/m/Y H:i:s');
                 $item->waktu_keluar_formatted = Carbon::parse($item->waktu_keluar)->format('d/m/Y H:i:s');
@@ -336,12 +369,48 @@ class ParkirController extends Controller
             return view('parkir.keluar', compact('parkirs', 'parkirKeluar'));
 
         } catch (\Exception $e) {
-            Log::error('Error Parkir Keluar Index:', [
+            Log::error('Error in Parkir Keluar Index:', [
                 'message' => $e->getMessage()
             ]);
             
             return back()->with('error', 'Terjadi kesalahan sistem');
         }
+    }
+
+    public function searchParkirKeluar(Request $request)
+{
+    try {
+        $search = $request->input('search');
+        $query = ParkirKeluar::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_kartu', 'LIKE', "%{$search}%")
+                  ->orWhere('plat_nomor', 'LIKE', "%{$search}%")
+                  ->orWhere('jenis_kendaraan', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $results = $query->orderBy('waktu_keluar', 'desc')->get();
+
+        // Format dates
+        $results->transform(function ($item) {
+            $item->waktu_masuk_formatted = Carbon::parse($item->waktu_masuk)->format('d/m/Y H:i:s');
+            $item->waktu_keluar_formatted = Carbon::parse($item->waktu_keluar)->format('d/m/Y H:i:s');
+            return $item;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $results
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ], 500);
+    }
     }
 }
 

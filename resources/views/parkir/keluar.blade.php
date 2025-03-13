@@ -104,28 +104,39 @@
                 <div class="card card-outline card-warning shadow-sm">
                     <div class="card-header">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
-                                        <i class="bi bi-search"></i>
-                                    </span>
-                                    <input type="text" 
-                                           id="searchInput" 
-                                           class="form-control" 
-                                           placeholder="Cari nomor kartu atau plat nomor...">
-                                    <button class="btn btn-warning" type="button" id="searchButton">
-                                        <i class="bi bi-search me-1"></i>
-                                        Cari
-                                    </button>
-                                </div>
+                            {{-- search --}}
+                            <div class="row mb-3">
+                    <div class="col-md-4">
+                        <form action="{{ route('parkir.keluar') }}" method="GET" class="position-relative" id="searchForm">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" 
+                                       id="search" 
+                                       name="search" 
+                                       class="form-control" 
+                                       placeholder="Cari nomor kartu, plat nomor..." 
+                                       value="{{ request('search') }}"
+                                       autocomplete="off">
+                                    @if(request('search'))
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSearch">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    @endif
                             </div>
+                        </form>
+                    </div>
+                </div>
+
+                            
                             <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-warning btn-sm btn-md-normal" data-bs-toggle="modal" data-bs-target="#modalTambah"> 
                                 <i class="bi bi-plus-lg me-1"></i>
                                 <span class="d-none d-md-inline">Tambah Data</span>
                                 <span class="d-inline d-md-none">Tambah</span>
                             </button>
-                                <a href="{{ route('parkir.cetak-pdf') }}" class="btn btn-danger btn-sm btn-md-normal">
+                                <a href="{{ route('parkir.cetak-pdf-keluar') }}" class="btn btn-danger btn-sm btn-md-normal">
                                     <i class="bi bi-file-pdf me-1"></i>
                                     <span class="d-none d-md-inline">Export PDF</span>
                                     <span class="d-inline d-md-none">PDF</span>
@@ -707,3 +718,163 @@ $(document).ready(function() {
 </script>
 @endpush
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    let searchTimeout;
+    const tableBody = $('#dataTable tbody');
+    
+    function performSearch() {
+        const searchValue = $('#searchInput').val().trim();
+        const searchButton = $('#searchButton');
+        
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+        
+        searchTimeout = setTimeout(() => {
+            $.ajax({
+                url: '{{ route("parkir.keluar.search") }}',
+                type: 'GET',
+                data: { search: searchValue },
+                beforeSend: function() {
+                    searchButton.prop('disabled', true)
+                        .html('<span class="spinner-border spinner-border-sm"></span>');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Clear existing table rows
+                        tableBody.empty();
+                        
+                        if (response.data.length > 0) {
+                            // Add new rows
+                            response.data.forEach(function(item) {
+                                const row = `
+                                    <tr>
+                                        <td>${item.nomor_kartu}</td>
+                                        <td class="text-uppercase">${item.plat_nomor}</td>
+                                        <td>
+                                            <span class="badge bg-${item.jenis_kendaraan === 'Mobil' ? 'primary' : (item.jenis_kendaraan === 'Sepeda Motor' ? 'success' : 'danger')} rounded-pill">
+                                                <i class="bi bi-${item.jenis_kendaraan === 'Mobil' ? 'car-front' : (item.jenis_kendaraan === 'Sepeda Motor' ? 'bicycle' : 'bus-front')} me-1"></i>
+                                                ${item.jenis_kendaraan}
+                                            </span>
+                                        </td>
+                                        <td>${item.waktu_masuk_formatted}</td>
+                                        <td>${item.waktu_keluar_formatted}</td>
+                                    </tr>
+                                `;
+                                tableBody.append(row);
+                            });
+                        } else {
+                            // Show no data message
+                            tableBody.html(`
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                            <p class="text-muted mt-2">Tidak ada data yang ditemukan</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr);
+                    alert('Terjadi kesalahan saat mencari data');
+                },
+                complete: function() {
+                    searchButton.prop('disabled', false)
+                        .html('<i class="bi bi-search me-1"></i>Cari');
+                }
+            });
+        }, 500); // Delay 500ms after typing
+    }
+
+    // Event handlers
+    $('#searchInput').on('input', performSearch);
+    
+    $('#searchInput').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+
+    $('#searchButton').on('click', performSearch);
+});
+</script>
+@endpush
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Handle search input
+    $('#search').on('input', function() {
+        clearTimeout(this.delay);
+        this.delay = setTimeout(function(){
+            $('#searchForm').submit();
+        }, 500);
+    });
+
+    // Handle clear search
+    $('#clearSearch').on('click', function() {
+        window.location.href = "{{ route('parkir.keluar') }}";
+    });
+
+    // Highlight search results
+    let searchTerm = "{{ request('search') }}";
+    if (searchTerm) {
+        $("#dataTable tbody td").each(function() {
+            let text = $(this).text();
+            if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
+                let regex = new RegExp(searchTerm, 'gi');
+                $(this).html(text.replace(regex, match => `<mark class="highlight">${match}</mark>`));
+            }
+        });
+    }
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+    .highlight {
+        background-color: #fff3cd;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    #clearSearch {
+        border: none;
+        background: transparent;
+        padding: 0.375rem 0.75rem;
+    }
+
+    #clearSearch:hover {
+        color: #dc3545;
+    }
+
+    .input-group {
+        border-radius: 0.375rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .input-group-text {
+        border: none;
+        background-color: #f8f9fa;
+    }
+
+    .form-control {
+        border: none;
+        box-shadow: none;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        background-color: #fff;
+    }
+</style>
+@endpush
