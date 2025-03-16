@@ -1,128 +1,365 @@
-<html>
-<head>
-    <title>Data Parkir Masuk</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-</head>
-<body class="bg-gray-100">
-    <header class="bg-white shadow">
-        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center">
-                <button class="text-gray-500 focus:outline-none">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="ml-4 text-lg font-semibold">Home</h1>
-            </div>
-            <div class="relative">
-                <input type="text" class="border rounded-lg py-2 px-4 pl-8" placeholder="Search">
-                <i class="fas fa-search absolute left-2 top-2.5 text-gray-500"></i>
+@extends('layouts.main')
+
+@section('title', 'Dashboard')
+
+@section('content')
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Dashboard</h1>
             </div>
         </div>
-    </header>
-    <main class="container mx-auto px-4 py-8">
-        <h2 class="text-lg font-semibold text-yellow-600 mb-4">Data Parkir masuk</h2>
-        <button class="bg-yellow-500 text-white py-2 px-4 rounded mb-4">Tambah</button>
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border">
-                <thead>
-                    <tr class="bg-yellow-500 text-white">
-                        <th class="py-2 px-4 border">No Kartu</th>
-                        <th class="py-2 px-4 border">Nomor plat</th>
-                        <th class="py-2 px-4 border">Jenis Kendaraan</th>
-                        <th class="py-2 px-4 border">masuk</th>
-                        <th class="py-2 px-4 border">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="py-2 px-4 border">301</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Sepeda Motor</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">101</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Sepeda Motor</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">301</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Mobil</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">101</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Mobil</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">301</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Bus</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">101</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Sepeda Motor</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">301</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Sepeda Motor</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 px-4 border">101</td>
-                        <td class="py-2 px-4 border">N 1234 EDG</td>
-                        <td class="py-2 px-4 border">Sepeda Motor</td>
-                        <td class="py-2 px-4 border">2024-12-12 13:40:14</td>
-                        <td class="py-2 px-4 border">
-                            <button class="bg-yellow-500 text-white py-1 px-2 rounded">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-2 rounded">Delete</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Info Boxes -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="bi bi-car-front-fill"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Kendaraan Aktif</span>
+                        <span class="info-box-number">{{ $stats['total_kendaraan_aktif'] }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="bi bi-box-arrow-in-right"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Masuk</span>
+                        <span class="info-box-number">{{ $stats['total_masuk'] }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="bi bi-box-arrow-right"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Keluar</span>
+                        <span class="info-box-number">{{ $stats['total_keluar'] }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger"><i class="bi bi-clock"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Rata-rata Durasi</span>
+                        <span class="info-box-number">{{ $stats['rata_rata_durasi'] }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </main>
-    <footer class="bg-gray-200 py-4">
-        <div class="container mx-auto px-4 text-center text-gray-600">
-            <p>Copyright © 2014-2021 <span class="text-yellow-600">AdminLTE.io</span>. All rights reserved.</p>
-            <p>Version 3.2.0</p>
+
+        <!-- Grafik -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Statistik Kendaraan</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statistikChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Jenis Kendaraan</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="jenisKendaraanChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
-</body>
-</html>
+
+        <!-- Ganti bagian Tabel Kendaraan Terbaru dengan ini -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header p-2">
+                        <ul class="nav nav-pills" id="parkirTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="pill" href="#parkir-summary" role="tab">Ringkasan Parkir</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#parkir-history" role="tab">Riwayat Parkir</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- Tab Ringkasan -->
+                            <div class="tab-pane fade show active" id="parkir-summary" role="tabpanel">
+                                <div class="row">
+                                    <!-- Okupansi per Jenis -->
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-gradient-info">
+                                            <span class="info-box-icon"><i class="bi bi-car-front"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Mobil Hari Ini</span>
+                                                <span class="info-box-number">{{ $stats['mobil_hari_ini'] ?? 0 }}</span>
+                                                <div class="progress">
+                                                    @php
+                                                        $totalKendaraan = ($stats['total_kendaraan_hari_ini'] ?? 0);
+                                                        $persentaseMobil = $totalKendaraan > 0 ? 
+                                                            ($stats['mobil_hari_ini'] / $totalKendaraan) * 100 : 0;
+                                                    @endphp
+                                                    <div class="progress-bar" style="width: {{ $persentaseMobil }}%"></div>
+                                                </div>
+                                                <span class="progress-description">
+                                                    {{ number_format($persentaseMobil, 1) }}% dari total kendaraan
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-gradient-success">
+                                            <span class="info-box-icon"><i class="bi bi-bicycle"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Motor Hari Ini</span>
+                                                <span class="info-box-number">{{ $stats['motor_hari_ini'] ?? 0 }}</span>
+                                                <div class="progress">
+                                                    @php
+                                                        $persentaseMotor = $totalKendaraan > 0 ? 
+                                                            ($stats['motor_hari_ini'] / $totalKendaraan) * 100 : 0;
+                                                    @endphp
+                                                    <div class="progress-bar" style="width: {{ $persentaseMotor }}%"></div>
+                                                </div>
+                                                <span class="progress-description">
+                                                    {{ number_format($persentaseMotor, 1) }}% dari total kendaraan
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-gradient-warning">
+                                            <span class="info-box-icon"><i class="bi bi-clock-history"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Rata-rata Durasi Hari Ini</span>
+                                                <span class="info-box-number">
+                                                    @php
+                                                        $durasi = $stats['rata_rata_durasi_hari_ini'] ?? 0;
+                                                        $jam = floor($durasi / 60);
+                                                        $menit = $durasi % 60;
+                                                    @endphp
+                                                    {{ $durasi > 0 ? "$jam jam $menit menit" : '-' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="info-box bg-gradient-primary">
+                                            <span class="info-box-icon"><i class="bi bi-bus-front"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text">Bus Hari Ini</span>
+                                                <span class="info-box-number">{{ $stats['bus_hari_ini'] ?? 0 }}</span>
+                                                <div class="progress">
+                                                    @php
+                                                        $persentaseBus = $totalKendaraan > 0 ? 
+                                                            ($stats['bus_hari_ini'] / $totalKendaraan) * 100 : 0;
+                                                    @endphp
+                                                    <div class="progress-bar" style="width: {{ $persentaseBus }}%"></div>
+                                                </div>
+                                                <span class="progress-description">
+                                                    {{ number_format($persentaseBus, 1) }}% dari total kendaraan
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab Riwayat -->
+                            <div class="tab-pane fade" id="parkir-history" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>No Kartu</th>
+                                                <th>Plat Nomor</th>
+                                                <th>Jenis</th>
+                                                <th>Masuk</th>
+                                                <th>Keluar</th>
+                                                <th>Durasi</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($parkirHistory as $parkir)
+                                            <tr>
+                                                <td>{{ $parkir->nomor_kartu }}</td>
+                                                <td class="text-uppercase">{{ $parkir->plat_nomor }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 
+                                                        $parkir->jenis_kendaraan === 'Mobil' ? 'primary' : 
+                                                        ($parkir->jenis_kendaraan === 'Bus' ? 'info' : 'success') 
+                                                    }}">
+                                                        {{ $parkir->jenis_kendaraan }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($parkir->waktu_masuk)->format('d/m H:i') }}</td>
+                                                <td>{{ $parkir->waktu_keluar ? \Carbon\Carbon::parse($parkir->waktu_keluar)->format('d/m H:i') : '-' }}</td>
+                                                <td>{{ $parkir->durasi }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $parkir->waktu_keluar ? 'success' : 'warning' }}">
+                                                        {{ $parkir->waktu_keluar ? 'Selesai' : 'Aktif' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center">Tidak ada data parkir</td>
+                                            </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Data Parkir -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Data Parkir Masuk & Keluar Terbaru</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>No Kartu</th>
+                                    <th>Plat Nomor</th>
+                                    <th>Jenis</th>
+                                    <th>Waktu Masuk</th>
+                                    <th>Waktu Keluar</th>
+                                    <th>Durasi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($parkirHistory as $parkir)
+                                <tr>
+                                    <td>{{ $parkir->nomor_kartu }}</td>
+                                    <td class="text-uppercase">{{ $parkir->plat_nomor }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            $parkir->jenis_kendaraan === 'Mobil' ? 'primary' : 
+                                            ($parkir->jenis_kendaraan === 'Bus' ? 'info' : 'success') 
+                                        }}">
+                                            {{ $parkir->jenis_kendaraan }}
+                                        </span>
+                                    </td>
+                                    <td>{{ Carbon\Carbon::parse($parkir->waktu_masuk)->format('d/m/Y H:i:s') }}</td>
+                                    <td>{{ Carbon\Carbon::parse($parkir->waktu_keluar)->format('d/m/Y H:i:s') }}</td>
+                                    <td>{{ $parkir->durasi }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="text-center py-3">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                            <p class="text-muted mt-2">Belum ada data parkir</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    // Data untuk grafik statistik
+    const statistikData = {
+        labels: @json($kendaraanMasukKeluar->pluck('tanggal')),
+        datasets: [{
+            label: 'Mobil',
+            data: @json($kendaraanMasukKeluar->pluck('mobil')),
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        },
+        {
+            label: 'Motor',
+            data: @json($kendaraanMasukKeluar->pluck('motor')),
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1
+        },
+        {
+            label: 'Bus',
+            data: @json($kendaraanMasukKeluar->pluck('bus')),
+            borderColor: 'rgb(54, 162, 235)',
+            tension: 0.1
+        }]
+    };
+
+    // Data untuk pie chart
+    const pieData = {
+        labels: @json($jenisKendaraan->pluck('jenis_kendaraan')),
+        datasets: [{
+            data: @json($jenisKendaraan->pluck('total')),
+            backgroundColor: [
+                'rgb(75, 192, 192)', // Mobil
+                'rgb(255, 99, 132)', // Motor
+                'rgb(54, 162, 235)'  // Bus
+            ]
+        }]
+    };
+
+    // Inisialisasi grafik statistik
+    new Chart(document.getElementById('statistikChart'), {
+        type: 'line',
+        data: statistikData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Inisialisasi pie chart
+    new Chart(document.getElementById('jenisKendaraanChart'), {
+        type: 'pie',
+        data: pieData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+
+    // Handle form submit
+    $('#dateRangeForm').on('submit', function(e) {
+        e.preventDefault();
+        window.location.href = '{{ route("dashboard") }}?' + $(this).serialize();
+    });
+});
+</script>
+@endpush
