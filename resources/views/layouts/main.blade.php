@@ -211,11 +211,14 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="#" class="nav-link text-danger">
+                                    <form action="{{ route('logout') }}" method="POST" id="logout-form">
+                                    @csrf
+                                    <a href="#" class="nav-link text-danger" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                         <i class="nav-icon bi bi-box-arrow-left"></i>
                                         <p>Keluar</p>
                                     </a>
-                                </li>
+                                </form>
+                            </li>
                             </ul>
                         </li>
                     </ul>

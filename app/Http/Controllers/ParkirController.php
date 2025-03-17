@@ -47,6 +47,13 @@ class ParkirController extends Controller
         }
     }
 
+    //Login
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    // dashboard    
     public function dashboard(Request $request)
     {
         try {
