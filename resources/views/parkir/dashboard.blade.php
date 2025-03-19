@@ -13,6 +13,44 @@
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="dateRangeForm" class="form-inline">
+            <div class="form-group mr-3">
+                <label class="mr-2">Filter:</label>
+                <select name="range" class="form-control" onchange="this.form.submit()">
+                    <option value="day" {{ request('range') == 'day' ? 'selected' : '' }}>Hari Ini</option>
+                    <option value="week" {{ request('range') == 'week' ? 'selected' : '' }}>Minggu Ini</option>
+                    <option value="month" {{ request('range') == 'month' ? 'selected' : '' }}>Bulan Ini</option>
+                    <option value="year" {{ request('range') == 'year' ? 'selected' : '' }}>Tahun Ini</option>
+                    <option value="custom" {{ request('range') == 'custom' ? 'selected' : '' }}>Custom</option>
+                </select>
+            </div>
+            <div id="customDateInputs" style="{{ request('range') == 'custom' ? '' : 'display: none;' }}">
+                <div class="form-group mr-3">
+                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                </div>
+                <div class="form-group mr-3">
+                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                </div>
+                <button type="submit" class="btn btn-primary">Terapkan</button>
+            </div>
+        </form>
+        
+        <!-- Add export button -->
+        <div class="mt-3">
+            <a href="{{ route('dashboard.export-pdf', [
+                'range' => request('range', 'day'),
+                'start_date' => request('start_date'),
+                'end_date' => request('end_date')
+            ]) }}" 
+            class="btn btn-danger">
+                <i class="fas fa-file-pdf mr-2"></i>Export PDF
+            </a>
+        </div>
+    </div>
+</div>
+
 <section class="content">
     <div class="container-fluid">
         <!-- Info Boxes -->
@@ -291,28 +329,79 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 $(document).ready(function() {
+    // Handle custom date range visibility
+    $('select[name="range"]').change(function() {
+        if ($(this).val() === 'custom') {
+            $('#customDateInputs').show();
+        } else {
+            $('#customDateInputs').hide();
+            this.form.submit();
+        }
+    });
+
     // Data untuk grafik statistik
     const statistikData = {
-        labels: @json($kendaraanMasukKeluar->pluck('tanggal')),
+        labels: @json($kendaraanMasukKeluar->pluck('tanggal')->map(function($date) {
+            return \Carbon\Carbon::parse($date)->format('d/m/Y');
+        })),
         datasets: [{
             label: 'Mobil',
             data: @json($kendaraanMasukKeluar->pluck('mobil')),
             borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true,
+            tension: 0.4
         },
         {
             label: 'Motor',
             data: @json($kendaraanMasukKeluar->pluck('motor')),
             borderColor: 'rgb(255, 99, 132)',
-            tension: 0.1
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            fill: true,
+            tension: 0.4
         },
         {
             label: 'Bus',
             data: @json($kendaraanMasukKeluar->pluck('bus')),
             borderColor: 'rgb(54, 162, 235)',
-            tension: 0.1
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.4
         }]
     };
+
+    // Inisialisasi grafik statistik
+    new Chart(document.getElementById('statistikChart'), {
+        type: 'line',
+        data: statistikData,
+        options: {
+            responsive: true,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Tanggal: ' + context[0].label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
 
     // Data untuk pie chart
     const pieData = {
@@ -326,20 +415,6 @@ $(document).ready(function() {
             ]
         }]
     };
-
-    // Inisialisasi grafik statistik
-    new Chart(document.getElementById('statistikChart'), {
-        type: 'line',
-        data: statistikData,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            }
-        }
-    });
 
     // Inisialisasi pie chart
     new Chart(document.getElementById('jenisKendaraanChart'), {

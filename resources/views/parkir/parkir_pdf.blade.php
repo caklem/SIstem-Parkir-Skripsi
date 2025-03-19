@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Data Parkir masuk {{ \Carbon\Carbon::now()->format('F-Y') }}</title>
+    <title>Laporan Parkir Masuk</title>
     <style>
         @page {
             margin: 0.5cm 1cm;
         }
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: Arial, sans-serif;
             padding: 20px;
         }
         .header {
@@ -23,7 +23,7 @@
             font-size: 14px;
             color: #666;
         }
-        table {
+        .table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
@@ -35,7 +35,7 @@
             text-align: left;
         }
         th {
-            background-color: #f8f9fa;
+            background-color: #f4f4f4;
         }
         tr:nth-child(even) {
             background-color: #f2f2f2;
@@ -44,15 +44,15 @@
 </head>
 <body>
     <div class="header">
-        <div class="title">LAPORAN DATA PARKIR MASUK HOTEL GOLDEN HILL </div>
-        <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->format('F Y') }}
+        <div class="title">Laporan Parkir Masuk</div>
+        <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->format('F Y') }}</div>
     </div>
-    <table>
+    <table class="table">
         <thead>
             <tr>
                 <th>No Kartu</th>
-                <th>Nomor Plat</th>
-                <th>Jenis Kendaraan</th>
+                <th>Plat Nomor</th>
+                <th>Jenis</th>
                 <th>Waktu Masuk</th>
             </tr>
         </thead>

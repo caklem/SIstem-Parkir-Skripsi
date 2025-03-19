@@ -56,88 +56,98 @@ class ParkirController extends Controller
     // dashboard    
     public function dashboard(Request $request)
     {
-        try {
-            $startDate = $request->start_date ? 
-                Carbon::parse($request->start_date)->startOfDay() : 
-                Carbon::today()->startOfDay();
-            
-            $endDate = $request->end_date ? 
-                Carbon::parse($request->end_date)->endOfDay() : 
-                Carbon::today()->endOfDay();
+        $range = $request->input('range', 'day');
+        $startDate = null;
+        $endDate = null;
 
-            // Basic stats
-            $stats = [
-                'total_kendaraan_aktif' => Parkir::count(),
-                'total_masuk' => ParkirKeluar::count(),
-                'total_keluar' => ParkirKeluar::count(),
-                'rata_rata_durasi' => $this->hitungRataRataDurasi()
-            ];
-
-            // Stats for today
-            $today = Carbon::today();
-            $stats['mobil_hari_ini'] = ParkirKeluar::whereDate('waktu_masuk', $today)
-                ->where('jenis_kendaraan', 'Mobil')
-                ->count();
-                
-            $stats['motor_hari_ini'] = ParkirKeluar::whereDate('waktu_masuk', $today)
-                ->where('jenis_kendaraan', 'Sepeda Motor')
-                ->count();
-
-            $stats['bus_hari_ini'] = ParkirKeluar::whereDate('waktu_masuk', $today)
-                ->where('jenis_kendaraan', 'Bus')
-                ->count();
-                
-            $stats['total_kendaraan_hari_ini'] = $stats['mobil_hari_ini'] + 
-                $stats['motor_hari_ini'] + 
-                $stats['bus_hari_ini'];
-
-            // Chart data - using one query for both masuk dan keluar
-            $kendaraanMasukKeluar = ParkirKeluar::selectRaw('
-                DATE(waktu_masuk) as tanggal,
-                COUNT(*) as total,
-                SUM(CASE WHEN jenis_kendaraan = "Mobil" THEN 1 ELSE 0 END) as mobil,
-                SUM(CASE WHEN jenis_kendaraan = "Sepeda Motor" THEN 1 ELSE 0 END) as motor,
-                SUM(CASE WHEN jenis_kendaraan = "Bus" THEN 1 ELSE 0 END) as bus
-            ')
-            ->whereBetween('waktu_masuk', [$startDate, $endDate])
-            ->groupBy('tanggal')
-            ->orderBy('tanggal')
-            ->get();
-
-            // Data for pie chart
-            $jenisKendaraan = ParkirKeluar::selectRaw('
-                jenis_kendaraan, 
-                COUNT(*) as total
-            ')
-            ->groupBy('jenis_kendaraan')
-            ->get();
-
-            // Recent parking history
-            $parkirHistory = ParkirKeluar::orderBy('waktu_keluar', 'desc')
-                ->take(10)
-                ->get()
-                ->map(function($item) {
-                    $masuk = Carbon::parse($item->waktu_masuk);
-                    $keluar = Carbon::parse($item->waktu_keluar);
-                    $item->durasi = $masuk->diffForHumans($keluar, true);
-                    return $item;
-                });
-
-            return view('parkir.dashboard', compact(
-                'stats',
-                'kendaraanMasukKeluar',
-                'jenisKendaraan',
-                'parkirHistory',
-                'startDate',
-                'endDate'
-            ));
-
-        } catch (\Exception $e) {
-            Log::error('Error in Dashboard:', [
-                'message' => $e->getMessage()
-            ]);
-            return back()->with('error', 'Terjadi kesalahan saat memuat dashboard');
+        switch ($range) {
+            case 'day':
+                $startDate = now()->startOfDay();
+                $endDate = now()->endOfDay();
+                break;
+            case 'week':
+                $startDate = now()->startOfWeek();
+                $endDate = now()->endOfWeek();
+                break;
+            case 'month':
+                $startDate = now()->startOfMonth();
+                $endDate = now()->endOfMonth();
+                break;
+            case 'year':
+                $startDate = now()->startOfYear();
+                $endDate = now()->endOfYear();
+                break;
+            case 'custom':
+                $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : now()->subDays(30)->startOfDay();
+                $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : now()->endOfDay();
+                break;
         }
+
+        // Get statistics data based on date range
+        $kendaraanMasukKeluar = ParkirKeluar::selectRaw('
+            DATE(waktu_masuk) as tanggal,
+            COUNT(*) as total,
+            SUM(CASE WHEN jenis_kendaraan = "Mobil" THEN 1 ELSE 0 END) as mobil,
+            SUM(CASE WHEN jenis_kendaraan = "Sepeda Motor" THEN 1 ELSE 0 END) as motor,
+            SUM(CASE WHEN jenis_kendaraan = "Bus" THEN 1 ELSE 0 END) as bus
+        ')
+        ->whereBetween('waktu_masuk', [$startDate, $endDate])
+        ->groupBy('tanggal')
+        ->orderBy('tanggal')
+        ->get();
+
+        // Basic stats
+        $stats = [
+            'total_kendaraan_aktif' => Parkir::count(),
+            'total_masuk' => ParkirKeluar::count(),
+            'total_keluar' => ParkirKeluar::count(),
+            'rata_rata_durasi' => $this->hitungRataRataDurasi()
+        ];
+
+        // Stats for today
+        $today = Carbon::today();
+        $stats['mobil_hari_ini'] = ParkirKeluar::whereDate('waktu_masuk', $today)
+            ->where('jenis_kendaraan', 'Mobil')
+            ->count();
+            
+        $stats['motor_hari_ini'] = ParkirKeluar::whereDate('waktu_masuk', $today)
+            ->where('jenis_kendaraan', 'Sepeda Motor')
+            ->count();
+
+        $stats['bus_hari_ini'] = ParkirKeluar::whereDate('waktu_masuk', $today)
+            ->where('jenis_kendaraan', 'Bus')
+            ->count();
+            
+        $stats['total_kendaraan_hari_ini'] = $stats['mobil_hari_ini'] + 
+            $stats['motor_hari_ini'] + 
+            $stats['bus_hari_ini'];
+
+        // Data for pie chart
+        $jenisKendaraan = ParkirKeluar::selectRaw('
+            jenis_kendaraan, 
+            COUNT(*) as total
+        ')
+        ->groupBy('jenis_kendaraan')
+        ->get();
+
+        // Recent parking history
+        $parkirHistory = ParkirKeluar::orderBy('waktu_keluar', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function($item) {
+                $masuk = Carbon::parse($item->waktu_masuk);
+                $keluar = Carbon::parse($item->waktu_keluar);
+                $item->durasi = $masuk->diffForHumans($keluar, true);
+                return $item;
+            });
+
+        return view('parkir.dashboard', compact(
+            'stats',
+            'kendaraanMasukKeluar',
+            'jenisKendaraan',
+            'parkirHistory'
+        ));
+
     }
 
     private function getKendaraanMasukData($startDate, $endDate)
@@ -431,13 +441,14 @@ class ParkirController extends Controller
     {
         try {
             $parkirs = Parkir::orderBy('waktu_masuk', 'desc')->get();
-            $pdf = PDF::loadView('parkir.parkir_pdf', compact('parkirs'));
-            return $pdf->download('laporan-parkir-masuk-'.now()->format('F-Y').'.pdf'); // Fixed missing quote and extension
+            $pdf = Pdf::loadView('parkir.parkir_pdf', compact('parkirs'));
+            return $pdf->download('laporan-parkir-masuk-'.now()->format('F-Y').'.pdf');
         } catch (\Exception $e) {
             Log::error('Error in Cetak PDF Masuk:', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return back()->with('error', 'Terjadi kesalahan saat mencetak PDF');
+            return back()->with('error', 'Terjadi kesalahan saat mencetak PDF: ' . $e->getMessage());
         }
     }
 
@@ -445,13 +456,14 @@ class ParkirController extends Controller
     {
         try {
             $parkirKeluar = ParkirKeluar::orderBy('waktu_keluar', 'desc')->get();
-            $pdf = PDF::loadView('parkir.parkir_keluar_pdf', compact('parkirKeluar'));
-            return $pdf->download('laporan-parkir-keluar-'.now()->format('F-Y').'.pdf'); // Fixed missing quote and extension
+            $pdf = Pdf::loadView('parkir.parkir_keluar_pdf', compact('parkirKeluar'));
+            return $pdf->download('laporan-parkir-keluar-'.now()->format('F-Y').'.pdf');
         } catch (\Exception $e) {
             Log::error('Error in Cetak PDF Keluar:', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return back()->with('error', 'Terjadi kesalahan saat mencetak PDF');
+            return back()->with('error', 'Terjadi kesalahan saat mencetak PDF: ' . $e->getMessage());
         }
     }
 
@@ -567,6 +579,135 @@ class ParkirController extends Controller
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function exportPDF(Request $request)
+    {
+        try {
+            $range = $request->input('range', 'day');
+            $startDate = null;
+            $endDate = null;
+
+            switch ($range) {
+                case 'day':
+                    $startDate = now()->startOfDay();
+                    $endDate = now()->endOfDay();
+                    $periode = 'Hari Ini (' . now()->format('d/m/Y') . ')';
+                    break;
+                case 'week':
+                    $startDate = now()->startOfWeek();
+                    $endDate = now()->endOfWeek();
+                    $periode = 'Minggu Ini (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
+                    break;
+                case 'month':
+                    $startDate = now()->startOfMonth();
+                    $endDate = now()->endOfMonth();
+                    $periode = 'Bulan ' . now()->format('F Y');
+                    break;
+                case 'year':
+                    $startDate = now()->startOfYear();
+                    $endDate = now()->endOfYear();
+                    $periode = 'Tahun ' . now()->format('Y');
+                    break;
+                case 'custom':
+                    $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : now()->subDays(30)->startOfDay();
+                    $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : now()->endOfDay();
+                    $periode = $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y');
+                    break;
+            }
+
+            // Get data
+            $stats = $this->getStats($startDate, $endDate);
+            $parkirHistory = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
+                                        ->orderBy('waktu_masuk', 'desc')
+                                        ->get();
+
+            $pdf = Pdf::loadView('parkir.dashboard-pdf', [
+                'stats' => $stats,
+                'parkirHistory' => $parkirHistory,
+                'periode' => $periode
+            ]);
+
+            return $pdf->download('laporan-dashboard-' . now()->format('Y-m-d') . '.pdf');
+        } catch (\Exception $e) {
+            Log::error('Error in Export PDF:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Terjadi kesalahan saat export PDF: ' . $e->getMessage());
+        }
+    }
+
+    public function exportDashboardPDF(Request $request)
+    {
+        try {
+            $range = $request->input('range', 'day');
+            $startDate = null;
+            $endDate = null;
+
+            // Set date range
+            switch ($range) {
+                case 'day':
+                    $startDate = now()->startOfDay();
+                    $endDate = now()->endOfDay();
+                    $periode = 'Hari Ini (' . now()->format('d/m/Y') . ')';
+                    break;
+                case 'week':
+                    $startDate = now()->startOfWeek();
+                    $endDate = now()->endOfWeek();
+                    $periode = 'Minggu Ini (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
+                    break;
+                case 'month':
+                    $startDate = now()->startOfMonth();
+                    $endDate = now()->endOfMonth();
+                    $periode = 'Bulan ' . now()->format('F Y');
+                    break;
+                case 'year':
+                    $startDate = now()->startOfYear();
+                    $endDate = now()->endOfYear();
+                    $periode = 'Tahun ' . now()->format('Y');
+                    break;
+                case 'custom':
+                    $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : now()->subDays(30)->startOfDay();
+                    $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : now()->endOfDay();
+                    $periode = $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y');
+                    break;
+            }
+
+            // Get data
+            $stats = [
+                'total_kendaraan_aktif' => Parkir::count(),
+                'total_masuk' => ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])->count(),
+                'total_keluar' => ParkirKeluar::whereBetween('waktu_keluar', [$startDate, $endDate])->count(),
+                'rata_rata_durasi' => $this->hitungRataRataDurasi(),
+                'mobil_hari_ini' => ParkirKeluar::whereDate('waktu_masuk', today())->where('jenis_kendaraan', 'Mobil')->count(),
+                'motor_hari_ini' => ParkirKeluar::whereDate('waktu_masuk', today())->where('jenis_kendaraan', 'Sepeda Motor')->count(),
+                'bus_hari_ini' => ParkirKeluar::whereDate('waktu_masuk', today())->where('jenis_kendaraan', 'Bus')->count(),
+            ];
+
+            $parkirHistory = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
+                ->orderBy('waktu_masuk', 'desc')
+                ->take(20)
+                ->get()
+                ->map(function($item) {
+                    $masuk = Carbon::parse($item->waktu_masuk);
+                    $keluar = Carbon::parse($item->waktu_keluar);
+                    $item->durasi = $masuk->diffForHumans($keluar, true);
+                    return $item;
+                });
+
+            $pdf = PDF::loadView('parkir.dashboard-pdf', [
+                'stats' => $stats,
+                'parkirHistory' => $parkirHistory,
+                'periode' => $periode
+            ]);
+
+            return $pdf->download('laporan-dashboard-' . now()->format('Y-m-d') . '.pdf');
+
+        } catch (\Exception $e) {
+            Log::error('Error generating PDF: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat mengexport PDF: ' . $e->getMessage());
         }
     }
 }

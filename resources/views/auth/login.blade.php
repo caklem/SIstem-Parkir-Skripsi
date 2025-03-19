@@ -7,7 +7,13 @@
     </div>
     <div class="card">
         <div class="card-body login-card-body">
-            <p class="login-box-msg">Memepermudah Pengelolaan Parkir</p>
+            <p class="login-box-msg">Mempermudah Pengelolaan Parkir</p>
+
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
 
             <form action="{{ route('login') }}" method="post">
                 @csrf
