@@ -17,6 +17,12 @@
 
             <form action="{{ route('login') }}" method="post">
                 @csrf
+                @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                @endif
                 <div class="input-group mb-3">
                     <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" 
                            placeholder="Email" value="{{ old('email') }}" required autofocus>

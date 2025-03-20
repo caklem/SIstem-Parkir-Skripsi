@@ -25,7 +25,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#"><i class="nav-icon bi bi-box-arrow-right"></i></a></li>
                     <li class="breadcrumb-item active">Data Parkir Keluar</li>
                 </ol>
             </div>

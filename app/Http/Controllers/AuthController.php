@@ -49,9 +49,9 @@ class AuthController extends Controller
             return redirect()->intended('dashboard');
         }
 
-        return back()->withErrors([
-            'email' => 'Email atau password salah'
-        ]);
+        return back()
+            ->withInput($request->only('email'))
+            ->with('error', 'Login gagal, silahkan cek email dan password anda');
     }
 
     public function logout(Request $request){

@@ -12,7 +12,7 @@
     <!-- Spasi Kecil -->
     <div class="ms-2"></div>
     <!-- Judul -->
-    {{-- <h5 class="text-warning font-weight-bold m-0">Data Parkir Masuk</h5> --}}
+    {{-- <h5 class="text-warning font-weight-bold mb-0">Dashboard Parkir Keluar</h5>     --}}
 </div>
 
 <!-- Content Header -->
@@ -25,7 +25,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#"><i class="nav-icon bi bi-box-arrow-in-right"></i></a></li>
                     <li class="breadcrumb-item active">Data Parkir Masuk</li>
                 </ol>
             </div>

@@ -3,11 +3,31 @@
 @section('title', 'Dashboard')
 
 @section('content')
+<!-- Simple Navbar -->
+<div class="navbar bg-white py-2 px-4 border-bottom d-flex align-items-center">
+    <!-- Tombol Sidebar -->
+    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+        <i class="bi bi-list"></i>
+    </a>
+    <!-- Spasi Kecil -->
+    <div class="ms-2"></div>
+    <!-- Judul -->
+    {{-- <h5 class="text-warning font-weight-bold mb-0">Dashboard Parkir Keluar</h5>     --}}
+</div>
+
+<!-- Content Header -->
 <div class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row mb-2 align-items-center">
             <div class="col-sm-6">
-                <h1 class="m-0">Dashboard</h1>
+                <h1 class="m-0 text-dark">Dashboard</h1>
+                <p class="text-muted m-0">Manajemen data parkir kendaraan Golden Hill</p>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house"></i></a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
             </div>
         </div>
     </div>

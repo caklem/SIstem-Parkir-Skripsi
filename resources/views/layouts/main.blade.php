@@ -172,7 +172,7 @@
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         <li class="nav-item">
                             <a href="{{ route('parkir.dashboard') }}" class="nav-link {{ Request::routeIs('parkir.dashboard') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-speedometer2"></i>
+                                <i class="bi bi-house"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
