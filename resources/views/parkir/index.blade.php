@@ -258,14 +258,31 @@
             <form action="{{ route('parkir.store') }}" method="POST" id="formParkir">
                 @csrf
                 <div class="modal-body">
+                    <!-- QR Scanner Section -->
+                    <div class="form-group mb-3">
+                        <div id="reader" class="mb-2" style="width: 100%"></div>
+                        <div class="d-flex justify-content-center gap-2 mb-3">
+                            <button type="button" class="btn btn-warning" id="startButton">
+                                <i class="fas fa-camera"></i> Mulai Scanner
+                            </button>
+                            <button type="button" class="btn btn-danger" id="stopButton">
+                                <i class="fas fa-stop"></i> Stop Scanner
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form Fields -->
                     <div class="form-group">
                         <label for="nomor_kartu">Nomor Kartu</label>
-                        <input type="number" name="nomor_kartu" id="nomor_kartu" class="form-control @error('nomor_kartu') is-invalid @enderror" 
-                            value="{{ old('nomor_kartu') }}" required autocomplete="off" autofocus placeholder="Masukkan nomor kartu (1-100)" min="1" max="100">
+                        <input type="number" name="nomor_kartu" id="nomor_kartu" 
+                               class="form-control @error('nomor_kartu') is-invalid @enderror" 
+                               value="{{ old('nomor_kartu') }}" required autocomplete="off" 
+                               placeholder="Scan QR atau masukkan nomor kartu" readonly>
                         @error('nomor_kartu')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
+                    
                     <div class="form-group">
                         <label for="plat_nomor">Nomor Plat</label>
                         <input type="text" name="plat_nomor" id="plat_nomor" class="form-control @error('plat_nomor') is-invalid @enderror" 
@@ -354,6 +371,10 @@
 
 <!-- Bootstrap JS (Opsional, jika diperlukan) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Add in head section -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 <script>
     $(document).ready(function () {
@@ -506,6 +527,60 @@
             });
         }
     });
+</script>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+let html5QrcodeScanner = null;
+
+$(document).ready(function() {
+    // Start Scanner
+    $('#startButton').click(function() {
+        if (html5QrcodeScanner === null) {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                }
+            );
+            
+            html5QrcodeScanner.render((decodedText) => {
+                // Handle QR code result
+                $('#nomor_kartu').val(decodedText);
+                
+                // Stop scanner after successful scan
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                }
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Nomor kartu berhasil di-scan'
+                });
+            });
+        }
+    });
+
+    // Stop Scanner
+    $('#stopButton').click(function() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        }
+    });
+
+    // Clear scanner when modal closes
+    $('#parkirModal').on('hidden.bs.modal', function() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        }
+    });
+});
 </script>
 
 @endsection

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ParkirController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\QRCodeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -58,4 +59,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ParkirController::class, 'index'])->name('parkir.index');
         Route::get('/keluar', [ParkirController::class, 'keluarIndex'])->name('parkir.keluar'); // Changed from keluar to keluarIndex
     });
+
+    // QR Code routes
+    Route::post('/scan-qr', [QRCodeController::class, 'scanQR'])->name('scan.qr');
+    Route::get('/generate-qr/{nomorKartu}', [QRCodeController::class, 'generateQR'])->name('generate.qr');
 });
