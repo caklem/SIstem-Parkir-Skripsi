@@ -710,6 +710,40 @@ class ParkirController extends Controller
             return back()->with('error', 'Terjadi kesalahan saat mengexport PDF: ' . $e->getMessage());
         }
     }
+
+    public function checkCard(Request $request)
+    {
+        try {
+            $request->validate([
+                'nomor_kartu' => 'required|string'
+            ]);
+
+            // Cek apakah kartu sedang digunakan di parkir_masuk
+            $kartuDipakai = Parkir::where('nomor_kartu', $request->nomor_kartu)
+                                 ->whereNull('waktu_keluar')
+                                 ->first();
+
+            if ($kartuDipakai) {
+                return response()->json([
+                    'success' => true,
+                    'is_used' => true,
+                    'message' => 'Kartu sedang digunakan'
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'is_used' => false,
+                'message' => 'Kartu tersedia'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 
 

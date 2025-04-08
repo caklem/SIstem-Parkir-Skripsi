@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Sistem Parkir')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title') - Sistem Parkir</title>
 
     <!-- AdminLTE and Dependencies -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.1.0/styles/overlayscrollbars.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+    <!-- QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @stack('styles')
 
     <style>
         .main-sidebar {
@@ -151,9 +158,94 @@
         .content-wrapper {
             transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
         }
+
+        /* QR Scanner Styles */
+        #qr-reader-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        #reader video {
+            border-radius: 8px;
+        }
+
+        .qr-input-group {
+            position: relative;
+        }
+
+        .qr-input-group .btn-scan {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Sidebar Responsive Styles */
+        .main-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1038;
+            transition: transform .3s ease-in-out, margin-left .3s ease-in-out, width .3s ease-in-out;
+        }
+
+        @media (max-width: 991.98px) {
+            .main-sidebar {
+                transform: translateX(-250px);
+                margin-left: 0;
+            }
+
+            .sidebar-open .main-sidebar {
+                transform: translateX(0);
+            }
+
+            .main-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1037;
+            }
+
+            .sidebar-open .main-overlay {
+                display: block;
+            }
+
+            .content-wrapper {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* Improve transitions */
+        .main-sidebar, 
+        .content-wrapper {
+            transition: transform .3s ease-in-out,
+                        margin-left .3s ease-in-out;
+        }
+
+        /* Navbar toggle button */
+        [data-lte-toggle="sidebar"] {
+            cursor: pointer;
+            transition: color .3s ease;
+        }
     </style>
 </head>
 <body class="sidebar-mini layout-fixed">
+
     <div class="wrapper">
         <!-- Navbar -->
         {{-- @include('layouts.navbar') --}}
@@ -190,6 +282,22 @@
                             <a href="{{ route('parkir.keluar') }}" class="nav-link {{ Request::routeIs('parkir.keluar') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-box-arrow-right"></i>
                                 <p>Data Keluar</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">KARTU PARKIR</li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('qrcode.generate') }}" class="nav-link {{ Request::routeIs('qrcode.generate') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-qr-code"></i>
+                                <p>Generate QR Code</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('qrcode.list') }}" class="nav-link {{ Request::routeIs('qrcode.list') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-card-list"></i>
+                                <p>Daftar Kartu</p>
                             </a>
                         </li>
 
@@ -250,76 +358,120 @@
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
+    <!-- Replace the existing QR scanner script with this one -->
     <script>
+        let html5QrcodeScanner = null;
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+                $('#stopButton').show();
+                $('#startButton').hide();
+            }
+        }
+
+        // Simple QR Scanner implementation
         $(document).ready(function() {
-            // Initialize AdminLTE
-            if (typeof $.fn.AdminLTE !== 'undefined') {
-                $.AdminLTE.init();
-            }
+            $('#startButton').click(function() {
+                if (html5QrcodeScanner === null) {
+                    const html5QrCode = new Html5Qrcode("reader");
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    };
 
-            // Initialize OverlayScrollbars if sidebar exists
-            if ($('.main-sidebar').length > 0) {
-                const options = {
-                    scrollbars: {
-                        autoHide: 'leave',
-                        clickScrolling: true
-                    }
-                };
-                
-                $('.main-sidebar').each(function() {
-                    if (typeof OverlayScrollbars !== 'undefined') {
-                        OverlayScrollbars(this, options);
-                    }
-                });
-            }
+                    $('#stopButton').show();
+                    $(this).hide();
 
-            // Sidebar toggle handler
-            $('[data-widget="pushmenu"]').on('click', function(e) {
-                e.preventDefault();
-                if ($(window).width() >= 992) {
-                    $('body').toggleClass('sidebar-collapse');
-                } else {
-                    $('body').toggleClass('sidebar-open');
+                    html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        (decodedText) => {
+                            // On successful scan
+                            $('#nomor_kartu').val(decodedText);
+                            
+                            html5QrCode.stop();
+                            $('#reader').empty();
+                            $('#stopButton').hide();
+                            $('#startButton').show();
+
+                            // Show success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: 'QR Code berhasil di-scan',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        },
+                        (error) => {
+                            // Silence errors
+                        }
+                    ).catch((err) => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Tidak dapat mengakses kamera'
+                        });
+                        $('#stopButton').hide();
+                        $('#startButton').show();
+                    });
+
+                    // Stop button handler
+                    $('#stopButton').click(function() {
+                        if (html5QrCode) {
+                            html5QrCode.stop();
+                            $('#reader').empty();
+                            $('#stopButton').hide();
+                            $('#startButton').show();
+                        }
+                    });
                 }
             });
 
-            // Add active class to current menu item
-            const currentPath = window.location.pathname;
-            $(`.nav-sidebar a[href="${currentPath}"]`).addClass('active');
-
-            // Tambahkan handler untuk overlay
-            $('.main-overlay').on('click', function() {
-                $('body').removeClass('sidebar-open');
-            });
-
-            // Perbaikan toggle sidebar untuk mobile
-            $('[data-widget="pushmenu"], [data-lte-toggle="sidebar"]').on('click', function(e) {
-                e.preventDefault();
-                if ($(window).width() <= 991.98) {
-                    $('body').toggleClass('sidebar-open');
-                } else {
-                    $('body').toggleClass('sidebar-collapse');
+            // Reset scanner when modal is closed
+            $('.modal').on('hidden.bs.modal', function() {
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
                 }
-            });
-
-            // Handle window resize
-            $(window).on('resize', function() {
-                if ($(window).width() > 991.98) {
-                    $('body').removeClass('sidebar-open');
-                }
-            });
-
-            // Close sidebar when clicking outside on mobile
-            $(document).on('click', function(e) {
-                if ($(window).width() <= 991.98) {
-                    if (!$(e.target).closest('.main-sidebar').length && 
-                        !$(e.target).closest('[data-widget="pushmenu"]').length &&
-                        !$(e.target).closest('[data-lte-toggle="sidebar"]').length) {
-                        $('body').removeClass('sidebar-open');
-                    }
-                }
+                $('#reader').empty();
+                $('#stopButton').hide();
+                $('#startButton').show();
             });
         });
+    </script>
+
+    <script>
+    $(document).ready(function() {
+        // Handle sidebar toggle
+        $('[data-lte-toggle="sidebar"]').on('click', function(e) {
+            e.preventDefault();
+            $('body').toggleClass('sidebar-open');
+            
+            // Add overlay when sidebar is open
+            if ($('body').hasClass('sidebar-open')) {
+                $('.main-overlay').fadeIn();
+            } else {
+                $('.main-overlay').fadeOut();
+            }
+        });
+
+        // Close sidebar when clicking overlay
+        $('.main-overlay').on('click', function() {
+            $('body').removeClass('sidebar-open');
+            $(this).fadeOut();
+        });
+
+        // Handle window resize
+        $(window).on('resize', function() {
+            if ($(window).width() > 991.98) {
+                $('body').removeClass('sidebar-open');
+                $('.main-overlay').fadeOut();
+            }
+        });
+    });
     </script>
 
     @stack('scripts')

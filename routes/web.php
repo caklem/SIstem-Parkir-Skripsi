@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QRCodeController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // Authentication Routes
@@ -63,4 +63,16 @@ Route::middleware('auth')->group(function () {
     // QR Code routes
     Route::post('/scan-qr', [QRCodeController::class, 'scanQR'])->name('scan.qr');
     Route::get('/generate-qr/{nomorKartu}', [QRCodeController::class, 'generateQR'])->name('generate.qr');
+    Route::get('/qrcode/generate', [QRCodeController::class, 'showGenerateForm'])->name('qrcode.generate');
+    Route::get('/qrcode/list', [QRCodeController::class, 'index'])->name('qrcode.list');
+    Route::post('/qrcode/scan', [QRCodeController::class, 'scanQR'])->name('qrcode.scan');
+    Route::post('/parkir/check-card', [ParkirController::class, 'checkCard'])->name('parkir.check-card');
+
+    Route::prefix('qrcode')->group(function() {
+        Route::get('/', [QRCodeController::class, 'index'])->name('qrcode.list');
+        Route::get('/generate', [QRCodeController::class, 'showGenerateForm'])->name('qrcode.form');
+        Route::post('/generate', [QRCodeController::class, 'generateQR'])->name('qrcode.generate');
+        Route::get('/print/{nomorKartu}', [QRCodeController::class, 'print'])->name('qrcode.print');
+        Route::delete('/{id}', [QRCodeController::class, 'delete'])->name('qrcode.delete');
+    });
 });
