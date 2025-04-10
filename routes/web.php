@@ -52,6 +52,8 @@ Route::middleware('auth')->group(function () {
         // Search and PDF routes
         Route::get('/search', [ParkirController::class, 'search'])->name('parkir.search');
         Route::get('/cetak-pdf', [ParkirController::class, 'cetakPdf'])->name('parkir.cetak-pdf'); // Route untuk PDF parkir masuk
+        Route::post('/parkir/cari-kartu', [ParkirController::class, 'cariKartu'])->name('parkir.cari-kartu');
+        Route::post('parkir/proses-keluar', [ParkirController::class, 'prosesKeluar'])->name('parkir.proses-keluar');
     });
 
     Route::prefix('parkir')->group(function () {

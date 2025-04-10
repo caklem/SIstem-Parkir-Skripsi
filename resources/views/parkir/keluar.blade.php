@@ -11,8 +11,6 @@
     </a>
     <!-- Spasi Kecil -->
     <div class="ms-2"></div>
-    <!-- Judul -->
-    {{-- <h5 class="text-warning font-weight-bold mb-0">Dashboard Parkir Keluar</h5>     --}}
 </div>
 
 <!-- Content Header -->
@@ -62,7 +60,7 @@
                         <span class="info-box-text">Sepeda Motor</span>
                         <span class="info-box-number">{{ $parkirKeluar->where('jenis_kendaraan', 'Sepeda Motor')->count() }}</span>
                         <div class="progress" style="height: 3px;">
-                            <div class="progress-bar bg-success" style="width: {{ ($parkirKeluar->where('jenis_kendaraan', 'Sepeda Motor')->count() / $parkirs->count()) * 100 }}%"></div>
+                            <div class="progress-bar bg-success" style="width: {{ ($parkirKeluar->where('jenis_kendaraan', 'Sepeda Motor')->count() / max(1, $parkirs->count())) * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -77,7 +75,7 @@
                         <span class="info-box-text">Mobil</span>
                         <span class="info-box-number">{{ $parkirKeluar->where('jenis_kendaraan', 'Mobil')->count() }}</span>
                         <div class="progress" style="height: 3px;">
-                            <div class="progress-bar bg-primary" style="width: {{ ($parkirKeluar->where('jenis_kendaraan', 'Mobil')->count() / $parkirs->count()) * 100 }}%"></div>
+                            <div class="progress-bar bg-primary" style="width: {{ ($parkirKeluar->where('jenis_kendaraan', 'Mobil')->count() / max(1, $parkirs->count())) * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -92,20 +90,31 @@
                         <span class="info-box-text">Bus</span>
                         <span class="info-box-number">{{ $parkirKeluar->where('jenis_kendaraan', 'Bus')->count() }}</span>
                         <div class="progress" style="height: 3px;">
-                            <div class="progress-bar bg-danger" style="width: {{ ($parkirKeluar->where('jenis_kendaraan', 'Bus')->count() / $parkirs->count()) * 100 }}%"></div>
+                            <div class="progress-bar bg-danger" style="width: {{ ($parkirKeluar->where('jenis_kendaraan', 'Bus')->count() / max(1, $parkirs->count())) * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
             
-            <!-- Search & Buttons -->
+        <!-- Search & Buttons -->
+        <div class="row mb-3">
             <div class="col-12">
-                <div class="card card-outline card-warning shadow-sm">
-                    <div class="card-header">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                            {{-- search --}}
-                            <div class="row mb-3">
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <div>
+                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambah"> 
+                            <i class="bi bi-plus-lg me-1"></i>
+                            <span class="d-none d-md-inline">Tambah/Scan Data Keluar</span>
+                            <span class="d-inline d-md-none">Tambah</span>
+                        </button>
+                        
+                        <a href="{{ route('parkir.cetak-pdf-keluar') }}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-file-pdf me-1"></i>
+                            <span class="d-none d-md-inline">Export PDF</span>
+                            <span class="d-inline d-md-none">PDF</span>
+                        </a>
+                    </div>
+                    
                     <div class="col-md-4">
                         <form action="{{ route('parkir.keluar') }}" method="GET" class="position-relative" id="searchForm">
                             <div class="input-group">
@@ -128,21 +137,15 @@
                         </form>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                            
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-warning btn-sm btn-md-normal" data-bs-toggle="modal" data-bs-target="#modalTambah"> 
-                                <i class="bi bi-plus-lg me-1"></i>
-                                <span class="d-none d-md-inline">Tambah Data</span>
-                                <span class="d-inline d-md-none">Tambah</span>
-                            </button>
-                                <a href="{{ route('parkir.cetak-pdf-keluar') }}" class="btn btn-danger btn-sm btn-md-normal">
-                                    <i class="bi bi-file-pdf me-1"></i>
-                                    <span class="d-none d-md-inline">Export PDF</span>
-                                    <span class="d-inline d-md-none">PDF</span>
-                                </a>
-                            </div>
-                        </div>
+        <!-- Data Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-outline card-warning shadow-sm">
+                    <div class="card-header">
+                        <h3 class="card-title">Daftar Kendaraan Keluar</h3>
                     </div>
 
                     <div class="card-body p-0">
@@ -185,16 +188,6 @@
             </div>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-<!-- Bootstrap JS (Opsional, jika diperlukan) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </section>
 
 <!-- Modal Tambah Data -->
@@ -205,44 +198,79 @@
                 <h5 class="modal-title">Tambah Data Parkir Keluar</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            
+            <!-- Tambahkan Nav Tabs -->
+            <ul class="nav nav-tabs" id="tabKeluar" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pilih-tab" data-bs-toggle="tab" data-bs-target="#pilihKendaraan" type="button" role="tab" aria-controls="pilihKendaraan" aria-selected="true">Pilih Kendaraan</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="scan-tab" data-bs-toggle="tab" data-bs-target="#scanQR" type="button" role="tab" aria-controls="scanQR" aria-selected="false">Scan QR Code</button>
+                </li>
+            </ul>
+            
             <form id="formParkirKeluar">
                 @csrf
                 <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label for="searchKendaraan">Pilih Kendaraan</label>
-                        <select name="searchKendaraan" id="searchKendaraan" class="form-control" required>
-                            <option value="" selected disabled>Pilih Kendaraan dari Parkir Masuk</option>
-                            @foreach($parkirs as $parkir)
-                                <option value="{{ $parkir->id }}"
-                                    data-nomor-kartu="{{ $parkir->nomor_kartu }}"
-                                    data-plat-nomor="{{ $parkir->plat_nomor }}"
-                                    data-jenis-kendaraan="{{ $parkir->jenis_kendaraan }}"
-                                    data-waktu-masuk="{{ $parkir->waktu_masuk }}">
-                                    {{ $parkir->nomor_kartu }} - {{ $parkir->plat_nomor }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="tab-content" id="tabKeluarContent">
+                        <!-- Tab Pilih Kendaraan (Existing) -->
+                        <div class="tab-pane fade show active" id="pilihKendaraan" role="tabpanel" aria-labelledby="pilih-tab">
+                            <div class="form-group mb-3">
+                                <label for="searchKendaraan">Pilih Kendaraan</label>
+                                <select name="searchKendaraan" id="searchKendaraan" class="form-control" required>
+                                    <option value="" selected disabled>Pilih Kendaraan dari Parkir Masuk</option>
+                                    @foreach($parkirs as $parkir)
+                                        <option value="{{ $parkir->id }}"
+                                            data-nomor-kartu="{{ $parkir->nomor_kartu }}"
+                                            data-plat-nomor="{{ $parkir->plat_nomor }}"
+                                            data-jenis-kendaraan="{{ $parkir->jenis_kendaraan }}"
+                                            data-waktu-masuk="{{ $parkir->waktu_masuk }}">
+                                            {{ $parkir->nomor_kartu }} - {{ $parkir->plat_nomor }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tab Scan QR (New) -->
+                        <div class="tab-pane fade" id="scanQR" role="tabpanel" aria-labelledby="scan-tab">
+                            <div class="form-group mb-3">
+                                <div id="reader" class="mb-2" style="width: 100%"></div>
+                                <div class="d-flex justify-content-center gap-2 mb-3">
+                                    <button type="button" class="btn btn-warning" id="startButton">
+                                        <i class="fas fa-camera"></i> Mulai Scanner
+                                    </button>
+                                    <button type="button" class="btn btn-danger" id="stopButton" style="display: none;">
+                                        <i class="fas fa-stop"></i> Stop Scanner
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="hasilPencarian" class="d-none">
-                        <div class="card">
+                    <!-- Hasil Pencarian (Digunakan oleh kedua tab) -->
+                    <div id="hasilPencarian" class="mt-3 d-none">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-white">
+                                Detail Kendaraan
+                            </div>
                             <div class="card-body">
                                 <table class="table table-borderless">
                                     <tr>
-                                        <td>Nomor Kartu</td>
-                                        <td>: <span id="noKartu"></span></td>
+                                        <td width="40%">Nomor Kartu</td>
+                                        <td width="60%">: <span id="noKartu">-</span></td>
                                     </tr>
                                     <tr>
                                         <td>Plat Nomor</td>
-                                        <td>: <span id="platNomor"></span></td>
+                                        <td>: <span id="platNomor">-</span></td>
                                     </tr>
                                     <tr>
                                         <td>Jenis Kendaraan</td>
-                                        <td>: <span id="jenisKendaraan"></span></td>
+                                        <td>: <span id="jenisKendaraan">-</span></td>
                                     </tr>
                                     <tr>
                                         <td>Waktu Masuk</td>
-                                        <td>: <span id="waktuMasuk"></span></td>
+                                        <td>: <span id="waktuMasuk">-</span></td>
                                     </tr>
                                 </table>
                             </div>
@@ -257,399 +285,355 @@
         </div>
     </div>
 </div>
-
-<!-- Modal Edit -->
-<div class="modal fade" id="modalEdit" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Data Parkir Keluar</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="formEdit">
-                @csrf
-                @method('PUT')
-                <input type="hidden" id="editId">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nomor Kartu</label>
-                        <input type="text" class="form-control" id="editNoKartu" name="nomor_kartu" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Plat Nomor</label>
-                        <input type="text" class="form-control" id="editPlatNomor" name="plat_nomor" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jenis Kendaraan</label>
-                        <select class="form-select" id="editJenisKendaraan" name="jenis_kendaraan" required>
-                            <option value="Sepeda Motor">Sepeda Motor</option>
-                            <option value="Mobil">Mobil</option>
-                            <option value="Bus">Bus</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('styles')
-    <style>
-        .info-box {
-            min-height: 100px;
-            background: #fff;
-            width: 100%;
-            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            display: flex;
-            transition: all 0.3s ease;
-        }
+<style>
+    .info-box {
+        min-height: 100px;
+        background: #fff;
+        width: 100%;
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        transition: all 0.3s ease;
+    }
 
-        .info-box:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 3px 15px rgba(0,0,0,.1);
-        }
+    .info-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 3px 15px rgba(0,0,0,.1);
+    }
 
-        .info-box-icon {
-            border-radius: 0.5rem 0 0 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 80px;
-            font-size: 1.875rem;
-        }
+    .info-box-icon {
+        border-radius: 0.5rem 0 0 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        font-size: 1.875rem;
+    }
 
-        .info-box-content {
-            padding: 1rem;
-            flex: 1;
-        }
+    .info-box-content {
+        padding: 1rem;
+        flex: 1;
+    }
 
-        .info-box-number {
-            display: block;
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
+    .info-box-number {
+        display: block;
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
 
-        .badge {
-            padding: 0.5em 0.75em;
-        }
+    .badge {
+        padding: 0.5em 0.75em;
+    }
 
-        .table > :not(caption) > * > * {
-            padding: 1rem 0.75rem;
-        }
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.75rem;
+    }
 
-        .btn-group > .btn {
-            border-radius: 0.375rem !important;
-        }
+    .btn-group > .btn {
+        border-radius: 0.375rem !important;
+    }
 
-        /* Sidebar toggle button styles */
-        [data-lte-toggle="sidebar"] {
-            cursor: pointer;
-            color: #6c757d;
-            transition: color 0.3s ease;
-        }
+    /* Sidebar toggle button styles */
+    [data-lte-toggle="sidebar"] {
+        cursor: pointer;
+        color: #6c757d;
+        transition: color 0.3s ease;
+    }
 
-        [data-lte-toggle="sidebar"]:hover {
-            color: #000;
-        }
+    [data-lte-toggle="sidebar"]:hover {
+        color: #000;
+    }
 
-        [data-lte-toggle="sidebar"] i {
-            font-size: 1.5rem;
-        }
-    </style>
+    [data-lte-toggle="sidebar"] i {
+        font-size: 1.5rem;
+    }
+
+    .highlight {
+        background-color: #fff3cd;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    #clearSearch {
+        border: none;
+        background: transparent;
+        padding: 0.375rem 0.75rem;
+    }
+
+    #clearSearch:hover {
+        color: #dc3545;
+    }
+
+    /* Style QR scanner */
+    #reader {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    #reader video {
+        border-radius: 8px;
+    }
+</style>
 @endsection
 
 @push('scripts')
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
 <script>
+// Fungsi untuk memastikan QR library dimuat dengan benar
+function checkQRLibrary() {
+    return typeof Html5QrcodeScanner !== 'undefined';
+}
+
+// Fungsi untuk force release kamera
+async function forceReleaseCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        console.log('Camera released successfully');
+    } catch (e) {
+        console.error('Error releasing camera:', e);
+    }
+}
+
 $(document).ready(function() {
-    // Remove any overlayScrollbars initialization here
-    // It's now handled in main.blade.php
+    let html5QrcodeScanner = null;
+    let selectedKendaraanId = null;
     
-    // Your existing AJAX handlers
-    $('#btnProsesKeluar').on('click', function(e) {
-        e.preventDefault();
-        // ...existing code...
-    });
-});
-</script>
-@endpush
-
-@section('scripts')
-    <script>
-        $(document).ready(function() {
-            function cariKendaraan() {
-                const searchValue = $('#searchInput').val().trim();
-                
-                // Debug value yang akan dikirim
-                console.log('Search Value:', searchValue);
-
-                $.ajax({
-                    url: '{{ route("parkir.cari") }}',
-                    type: 'GET',
-                    data: { search: searchValue }, // Pastikan parameter bernama 'search'
-                    dataType: 'json',
-                    beforeSend: function() {
-                        $('#searchButton').prop('disabled', true);
-                        $('#searchButton').html('<span class="spinner-border spinner-border-sm"></span>');
-                    },
-                    success: function(response) {
-                        console.log('Response:', response); // Debug response
-                        if (response.success && response.data) {
-                            // ...rest of success handling
-                        } else {
-                            alert(response.message || 'Data tidak ditemukan');
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error:', xhr); // Debug error
-                        alert('Terjadi kesalahan saat mencari data');
-                    },
-                    complete: function() {
-                        $('#searchButton').prop('disabled', false);
-                        $('#searchButton').html('<i class="bi bi-search me-1"></i>Cari');
-                    }
+    // Function untuk stop scanner dengan lebih bersih
+    function stopScanner() {
+        if (html5QrcodeScanner) {
+            try {
+                html5QrcodeScanner.clear().then(() => {
+                    console.log('Scanner cleared successfully');
+                }).catch(error => {
+                    console.error('Error clearing scanner:', error);
+                }).finally(() => {
+                    setTimeout(() => {
+                        html5QrcodeScanner = null;
+                    }, 300);
                 });
+            } catch (err) {
+                console.error('Error stopping scanner:', err);
+                html5QrcodeScanner = null;
             }
-
-            // Event handlers
-            $('#searchInput').on('keypress', function(e) {
-                if (e.which === 13) {
-                    e.preventDefault();
-                    cariKendaraan();
-                }
-            });
-
-            $('#searchButton').on('click', cariKendaraan);
-        });
-    </script>
-    <script>
-        let selectedKendaraanId = null;
-
-        $('#btnCari').click(function() {
-            const keyword = $('#keyword').val().trim();
-            
-            if (!keyword) {
-                alert('Masukkan nomor kartu atau plat nomor');
-                return;
-            }
-
-            $.ajax({
-                url: '{{ route("parkir.cari") }}',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    keyword: keyword
-                },
-                beforeSend: function() {
-                    $('#btnCari').prop('disabled', true);
-                },
-                success: function(response) {
-                    if (response.success) {
-                        selectedKendaraanId = response.data.id;
-                        $('#noKartu').text(response.data.nomor_kartu);
-                        $('#platNomor').text(response.data.plat_nomor);
-                        $('#jenisKendaraan').text(response.data.jenis_kendaraan);
-                        $('#hasilPencarian').show();
-                    }
-                },
-                error: function(xhr) {
-                    alert(xhr.responseJSON?.message || 'Terjadi kesalahan');
-                    $('#hasilPencarian').hide();
-                },
-                complete: function() {
-                    $('#btnCari').prop('disabled', false);
-                }
-            });
-        });
-
-        $('#btnProsesKeluar').click(function() {
-            if (!selectedKendaraanId) return;
-
-            if (confirm('Proses kendaraan keluar?')) {
-                $.ajax({
-                    url: '{{ route("parkir.proses-keluar") }}',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        id: selectedKendaraanId
-                    },
-                    success: function(response) {
-                        alert('Kendaraan berhasil keluar');
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseJSON?.message || 'Gagal memproses kendaraan');
-                    }
-                });
-            }
-        });
-
-        // Pencarian kendaraan di modal tambah
-        $('#btnSearch').click(function() {
-            const keyword = $('#searchKendaraan').val().trim();
-            
-            if (!keyword) {
-                alert('Masukkan nomor kartu atau plat nomor');
-                return;
-            }
-
-            $.ajax({
-                url: '{{ route("parkir.cari") }}',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    keyword: keyword
-                },
-                success: function(response) {
-                    if (response.success) {
-                        selectedKendaraanId = response.data.id;
-                        $('#noKartu').text(response.data.nomor_kartu);
-                        $('#platNomor').text(response.data.plat_nomor);
-                        $('#jenisKendaraan').text(response.data.jenis_kendaraan);
-                        $('#waktuMasuk').text(moment(response.data.waktu_masuk).format('DD/MM/YYYY HH:mm:ss'));
-                        $('#hasilPencarian').removeClass('d-none');
-                    } else {
-                        alert(response.message);
-                        $('#hasilPencarian').addClass('d-none');
-                    }
-                }
-            });
-        });
-
-        // Edit data
-        function editData(id) {
-            $.get(`/parkir/keluar/${id}/edit`, function(data) {
-                $('#editId').val(data.id);
-                $('#editNoKartu').val(data.nomor_kartu);
-                $('#editPlatNomor').val(data.plat_nomor);
-                $('#editJenisKendaraan').val(data.jenis_kendaraan);
-            });
         }
+        $('#stopButton').hide();
+        $('#startButton').show();
+    }
 
-        $('#formEdit').submit(function(e) {
-            e.preventDefault();
-            const id = $('#editId').val();
-
-            $.ajax({
-                url: `/parkir/keluar/${id}`,
-                type: 'POST',
-                data: $(this).serialize(),
-                success: function(response) {
-                    $('#modalEdit').modal('hide');
-                    alert('Data berhasil diupdate');
-                    location.reload();
-                },
-                error: function() {
-                    alert('Gagal mengupdate data');
-                }
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            let selectedKendaraanId = null;
-
-            // Handler untuk pemilihan kendaraan
-            $('#searchKendaraan').on('change', function() {
-                const selected = $(this).find(':selected');
-                if (selected.val()) {
-                    selectedKendaraanId = selected.val();
-                    $('#noKartu').text(selected.data('nomor-kartu'));
-                    $('#platNomor').text(selected.data('plat-nomor'));
-                    $('#jenisKendaraan').text(selected.data('jenis-kendaraan'));
-                    $('#waktuMasuk').text(moment(selected.data('waktu-masuk')).format('DD/MM/YYYY HH:mm:ss'));
-                    $('#hasilPencarian').removeClass('d-none');
+    // Fungsi untuk memproses kendaraan keluar
+    function prosesKendaraanKeluar(id) {
+        $.ajax({
+            url: '{{ route("parkir.proses-keluar") }}',
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                id: id
+            },
+            beforeSend: function() {
+                // Tampilkan loading 
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Sedang memproses kendaraan keluar',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Kendaraan berhasil diproses keluar',
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        $('#modalTambah').modal('hide');
+                        location.reload();
+                    });
                 } else {
-                    selectedKendaraanId = null;
-                    $('#hasilPencarian').addClass('d-none');
-                }
-            });
-
-            // Handler untuk proses keluar
-            $(document).on('click', '#btnProsesKeluar', function(e) {
-                e.preventDefault();
-
-                if (!selectedKendaraanId) {
-                    alert('Pilih kendaraan terlebih dahulu!');
-                    return;
-                }
-
-                if (confirm('Apakah Anda yakin ingin memproses kendaraan keluar?')) {
-                    const $btn = $(this);
-
-                    $.ajax({
-                        url: '{{ route("parkir.proses-keluar") }}',
-                        type: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            id: selectedKendaraanId
-                        },
-                        beforeSend: function() {
-                            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Memproses...');
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                alert('Kendaraan berhasil keluar');
-                                $('#modalTambah').modal('hide');
-                                window.location.reload();
-                            } else {
-                                alert(response.message || 'Gagal memproses kendaraan');
-                            }
-                        },
-                        error: function(xhr) {
-                            alert(xhr.responseJSON?.message || 'Gagal memproses kendaraan keluar');
-                        },
-                        complete: function() {
-                            $btn.prop('disabled', false).html('Proses Keluar');
-                        }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: response.message || 'Gagal memproses kendaraan keluar',
+                        confirmButtonColor: '#dc3545'
                     });
                 }
-            });
-
-            // Reset form saat modal ditutup
-            $('#modalTambah').on('hidden.bs.modal', function() {
-                selectedKendaraanId = null;
-                $('#searchKendaraan').val('').trigger('change');
-                $('#hasilPencarian').addClass('d-none');
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Format tanggal menggunakan moment.js
-            function formatDate(date) {
-                return moment(date).format('DD/MM/YYYY HH:mm:ss');
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: xhr.responseJSON?.message || 'Terjadi kesalahan sistem',
+                    confirmButtonColor: '#dc3545'
+                });
             }
-
-            $('#searchKendaraan').on('change', function() {
-                const selected = $(this).find(':selected');
-                if (selected.val()) {
-                    selectedKendaraanId = selected.val();
-                    $('#noKartu').text(selected.data('nomor-kartu'));
-                    $('#platNomor').text(selected.data('plat-nomor'));
-                    $('#jenisKendaraan').text(selected.data('jenis-kendaraan'));
-                    // Format waktu masuk menggunakan moment.js
-                    $('#waktuMasuk').text(formatDate(selected.data('waktu-masuk')));
-                    $('#hasilPencarian').removeClass('d-none');
-                } else {
-                    $('#hasilPencarian').addClass('d-none');
-                    selectedKendaraanId = null;
-                }
-            });
         });
-    </script>
-    @push('scripts')
-<script>
-$(document).ready(function() {
-    let selectedKendaraanId = null;
+    }
 
-    // Handler untuk pemilihan kendaraan
+    // Fungsi untuk inisialisasi scanner
+    function initScanner() {
+        if (!checkQRLibrary()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Library QR Scanner tidak dimuat. Silakan refresh halaman.'
+            });
+            return;
+        }
+
+        $('#stopButton').show();
+        $('#startButton').hide();
+        
+        try {
+            console.log('Initializing scanner...');
+            
+            // Buat instance QR scanner baru
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    rememberLastUsedCamera: false,
+                    aspectRatio: 1.0
+                }
+            );
+            
+            console.log('Scanner initialized');
+            
+            // Render scanner dengan callback success dan error
+            html5QrcodeScanner.render(onScanSuccess, onScanError);
+        } catch (e) {
+            console.error('Error creating scanner:', e);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Tidak dapat membuat scanner. Error: ' + e.message
+            });
+            $('#stopButton').hide();
+            $('#startButton').show();
+        }
+    }
+
+    // Handler untuk QR yang berhasil di-scan
+    function onScanSuccess(decodedText) {
+        console.log('QR Code detected:', decodedText);
+        
+        // Cari data kendaraan berdasarkan nomor kartu
+        $.ajax({
+            url: '{{ route("parkir.cari-kartu") }}',
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                nomor_kartu: decodedText
+            },
+            success: function(response) {
+                console.log('Response from server:', response);
+                
+                if (response.success) {
+                    const data = response.data;
+                    
+                    // Cek apakah kendaraan sudah keluar
+                    if (data.waktu_keluar) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kendaraan Sudah Keluar',
+                            text: 'Kendaraan dengan nomor kartu ini sudah tercatat keluar',
+                            confirmButtonColor: '#dc3545'
+                        });
+                        return;
+                    }
+                    
+                    // Tampilkan data kendaraan
+                    selectedKendaraanId = data.id;
+                    $('#noKartu').text(data.nomor_kartu);
+                    $('#platNomor').text(data.plat_nomor);
+                    $('#jenisKendaraan').text(data.jenis_kendaraan);
+                    $('#waktuMasuk').text(moment(data.waktu_masuk).format('DD/MM/YYYY HH:mm:ss'));
+                    $('#hasilPencarian').removeClass('d-none');
+                    
+                    // Stop scanner
+                    stopScanner();
+                    
+                    // Otomatis proses kendaraan keluar
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Kendaraan Ditemukan',
+                        text: 'Kendaraan akan diproses keluar secara otomatis',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Langsung proses keluar setelah scan
+                        prosesKendaraanKeluar(data.id);
+                    });
+                } else {
+                    // Kartu tidak ditemukan
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kartu Tidak Ditemukan',
+                        text: response.message || 'Kartu tidak terdaftar atau tidak ada data parkir masuk',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat mencari data',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        });
+    }
+
+    // Handler untuk error saat scan
+    function onScanError(errorMessage) {
+        console.error('QR Scanner error:', errorMessage);
+    }
+
+    // Start QR Scanner
+    $('#startButton').click(async function() {
+        // Force release camera terlebih dahulu
+        await forceReleaseCamera();
+        
+        // Jeda sejenak sebelum menginisialisasi scanner
+        setTimeout(initScanner, 300);
+    });
+
+    // Stop Scanner Button
+    $('#stopButton').click(function() {
+        stopScanner();
+    });
+
+    // Reset saat modal ditutup
+    $('#modalTambah').on('hidden.bs.modal', async function() {
+        console.log('Modal hidden');
+        stopScanner();
+        await forceReleaseCamera();
+        selectedKendaraanId = null;
+        $('#searchKendaraan').val('').trigger('change');
+        $('#hasilPencarian').addClass('d-none');
+    });
+
+    // Handle tab change
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        console.log('Tab changed:', e.target.id);
+        stopScanner();
+    });
+
+    // Existing code for select dropdown
     $('#searchKendaraan').on('change', function() {
         const selected = $(this).find(':selected');
         if (selected.val()) {
@@ -665,151 +649,36 @@ $(document).ready(function() {
         }
     });
 
-    // Handler untuk proses keluar
+    // Handler untuk proses keluar (tombol manual) - hanya untuk tab "Pilih Kendaraan"
     $('#btnProsesKeluar').on('click', function(e) {
         e.preventDefault();
 
         if (!selectedKendaraanId) {
-            alert('Pilih kendaraan terlebih dahulu!');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian',
+                text: 'Pilih kendaraan atau scan QR code terlebih dahulu!',
+                confirmButtonColor: '#ffc107'
+            });
             return;
         }
 
-        if (!confirm('Apakah Anda yakin ingin memproses kendaraan keluar?')) {
-            return;
-        }
-
-        $.ajax({
-            url: '{{ route("parkir.proses-keluar") }}',
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                id: selectedKendaraanId
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    location.reload();
-                } else {
-                    alert(response.message || 'Gagal memproses kendaraan keluar');
-                }
-            },
-            error: function(xhr) {
-                const errors = xhr.responseJSON?.errors || {};
-                let errorMessage = '';
-                
-                if (errors) {
-                    for (let field in errors) {
-                        errorMessage += errors[field].join('\n') + '\n';
-                    }
-                }
-                
-                alert(errorMessage || xhr.responseJSON?.message || 'Terjadi kesalahan sistem');
+        Swal.fire({
+            title: 'Konfirmasi',
+            text: 'Apakah Anda yakin ingin memproses kendaraan keluar?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Proses!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                prosesKendaraanKeluar(selectedKendaraanId);
             }
         });
     });
 
-    // Reset form saat modal ditutup
-    $('#modalTambah').on('hidden.bs.modal', function() {
-        selectedKendaraanId = null;
-        $('#searchKendaraan').val('').trigger('change');
-        $('#hasilPencarian').addClass('d-none');
-    });
-});
-</script>
-@endpush
-@endsection
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    let searchTimeout;
-    const tableBody = $('#dataTable tbody');
-    
-    function performSearch() {
-        const searchValue = $('#searchInput').val().trim();
-        const searchButton = $('#searchButton');
-        
-        // Clear previous timeout
-        clearTimeout(searchTimeout);
-        
-        searchTimeout = setTimeout(() => {
-            $.ajax({
-                url: '{{ route("parkir.keluar.search") }}',
-                type: 'GET',
-                data: { search: searchValue },
-                beforeSend: function() {
-                    searchButton.prop('disabled', true)
-                        .html('<span class="spinner-border spinner-border-sm"></span>');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Clear existing table rows
-                        tableBody.empty();
-                        
-                        if (response.data.length > 0) {
-                            // Add new rows
-                            response.data.forEach(function(item) {
-                                const row = `
-                                    <tr>
-                                        <td>${item.nomor_kartu}</td>
-                                        <td class="text-uppercase">${item.plat_nomor}</td>
-                                        <td>
-                                            <span class="badge bg-${item.jenis_kendaraan === 'Mobil' ? 'primary' : (item.jenis_kendaraan === 'Sepeda Motor' ? 'success' : 'danger')} rounded-pill">
-                                                <i class="bi bi-${item.jenis_kendaraan === 'Mobil' ? 'car-front' : (item.jenis_kendaraan === 'Sepeda Motor' ? 'bicycle' : 'bus-front')} me-1"></i>
-                                                ${item.jenis_kendaraan}
-                                            </span>
-                                        </td>
-                                        <td>${item.waktu_masuk_formatted}</td>
-                                        <td>${item.waktu_keluar_formatted}</td>
-                                    </tr>
-                                `;
-                                tableBody.append(row);
-                            });
-                        } else {
-                            // Show no data message
-                            tableBody.html(`
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <div class="d-flex flex-column align-items-center">
-                                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
-                                            <p class="text-muted mt-2">Tidak ada data yang ditemukan</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `);
-                        }
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Error:', xhr);
-                    alert('Terjadi kesalahan saat mencari data');
-                },
-                complete: function() {
-                    searchButton.prop('disabled', false)
-                        .html('<i class="bi bi-search me-1"></i>Cari');
-                }
-            });
-        }, 500); // Delay 500ms after typing
-    }
-
-    // Event handlers
-    $('#searchInput').on('input', performSearch);
-    
-    $('#searchInput').on('keypress', function(e) {
-        if (e.which === 13) {
-            e.preventDefault();
-            performSearch();
-        }
-    });
-
-    $('#searchButton').on('click', performSearch);
-});
-</script>
-@endpush
-
-@push('scripts')
-<script>
-$(document).ready(function() {
     // Handle search input
     $('#search').on('input', function() {
         clearTimeout(this.delay);
@@ -836,45 +705,4 @@ $(document).ready(function() {
     }
 });
 </script>
-@endpush
-
-@push('styles')
-<style>
-    .highlight {
-        background-color: #fff3cd;
-        padding: 2px;
-        border-radius: 3px;
-    }
-
-    #clearSearch {
-        border: none;
-        background: transparent;
-        padding: 0.375rem 0.75rem;
-    }
-
-    #clearSearch:hover {
-        color: #dc3545;
-    }
-
-    .input-group {
-        border-radius: 0.375rem;
-        overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-    }
-
-    .input-group-text {
-        border: none;
-        background-color: #f8f9fa;
-    }
-
-    .form-control {
-        border: none;
-        box-shadow: none;
-    }
-
-    .form-control:focus {
-        box-shadow: none;
-        background-color: #fff;
-    }
-</style>
 @endpush

@@ -291,6 +291,37 @@ class ParkirController extends Controller
         ]);
     }
 
+    public function cariKartu(Request $request)
+    {
+        try {
+            $request->validate([
+                'nomor_kartu' => 'required|string'
+            ]);
+
+            $parkir = Parkir::where('nomor_kartu', $request->nomor_kartu)
+                           ->whereNull('waktu_keluar')
+                           ->latest()
+                           ->first();
+
+            if (!$parkir) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kendaraan dengan nomor kartu ini tidak ditemukan atau sudah keluar'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $parkir
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function prosesKeluar(Request $request)
     {
         try {
