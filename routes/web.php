@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ParkirController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QRCodeController;
+use App\Http\Controllers\PlateOCRController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -77,4 +78,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/print/{nomorKartu}', [QRCodeController::class, 'print'])->name('qrcode.print');
         Route::delete('/{id}', [QRCodeController::class, 'delete'])->name('qrcode.delete');
     });
+
+    // Routes for Plate OCR
+    Route::post('/ocr/validate-plate', [PlateOCRController::class, 'validatePlate'])->name('ocr.validate-plate');
+    Route::post('/ocr/log-result', [PlateOCRController::class, 'logOcrResult'])->name('ocr.log-result');
+    Route::post('ocr/validate-plate', [PlateOCRController::class, 'validatePlate'])->name('ocr.validate-plate');
 });
