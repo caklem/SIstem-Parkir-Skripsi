@@ -122,18 +122,21 @@
                             Data Kendaraan Parkir
                         </h3>
                     </div>
+                    <!-- Menampilkan atau menyembunyikan tombol tambah data sesuai role -->
                     <div class="d-flex gap-2 flex-wrap">
-                        <button type="button" class="btn btn-warning btn-sm btn-md-normal" id="btnTambah">
-                            <i class="bi bi-plus-lg me-1"></i>
-                            <span class="d-none d-md-inline">Tambah Data</span>
-                            <span class="d-inline d-md-none">Tambah</span>
-                        </button>
+                        @if(!Auth::user()->isAdmin())
+                            <button type="button" class="btn btn-warning btn-sm btn-md-normal" id="btnTambah">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                <span class="d-none d-md-inline">Tambah Data</span>
+                                <span class="d-inline d-md-none">Tambah</span>
+                            </button>
+                        @endif
                         <a href="{{ route('parkir.cetak-pdf-masuk') }}" class="btn btn-danger btn-sm btn-md-normal">
                             <i class="bi bi-file-pdf me-1"></i>
                             <span class="d-none d-md-inline">Export PDF</span>
                             <span class="d-inline d-md-none">PDF</span>
                         </a>
-                    </div>  
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -289,24 +292,51 @@
                     
                     <div class="form-group">
                         <label for="plat_nomor">Nomor Plat</label>
-                        <input type="text" name="plat_nomor" id="plat_nomor" class="form-control @error('plat_nomor') is-invalid @enderror" 
-                            value="{{ old('plat_nomor') }}" required autocomplete="off" placeholder="Masukkan nomor plat kendaraan">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-car-front"></i>
+                            </span>
+                            <input type="text" 
+                                   name="plat_nomor" 
+                                   id="plat_nomor" 
+                                   class="form-control @error('plat_nomor') is-invalid @enderror" 
+                                   value="{{ old('plat_nomor') }}" 
+                                   required 
+                                   placeholder="Masukkan nomor plat (contoh: B 1234 XYZ)"
+                                   autocomplete="off">
+                            <button type="button" class="btn btn-outline-secondary plate-edit-btn" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </div>
                         @error('plat_nomor')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
+                        <div class="plate-input-info">
+                            <small>Nilai terdeteksi otomatis. Silakan edit jika diperlukan.</small>
+                        </div>
                     </div>
-                    <div class="form-group">
+
+                    <div class="form-group mt-3">
                         <label for="jenis_kendaraan">Jenis Kendaraan</label>
-                        <select name="jenis_kendaraan" id="jenis_kendaraan" class="form-control @error('jenis_kendaraan') is-invalid @enderror" required>
-                            <option value="" disabled selected>Pilih Jenis Kendaraan</option>
-                            <option value="Sepeda Motor" {{ old('jenis_kendaraan') == 'Sepeda Motor' ? 'selected' : '' }}>Sepeda Motor</option>
-                            <option value="Mobil" {{ old('jenis_kendaraan') == 'Mobil' ? 'selected' : '' }}>Mobil</option>
-                            <option value="Bus" {{ old('jenis_kendaraan') == 'Bus' ? 'selected' : '' }}>Bus</option>
-                        </select>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-car-front"></i>
+                            </span>
+                            <select name="jenis_kendaraan" 
+                                    id="jenis_kendaraan" 
+                                    class="form-control @error('jenis_kendaraan') is-invalid @enderror" 
+                                    required>
+                                <option value="" disabled selected>Pilih jenis kendaraan</option>
+                                <option value="Sepeda Motor" {{ old('jenis_kendaraan') == 'Sepeda Motor' ? 'selected' : '' }}>Sepeda Motor</option>
+                                <option value="Mobil" {{ old('jenis_kendaraan') == 'Mobil' ? 'selected' : '' }}>Mobil</option>
+                                <option value="Bus" {{ old('jenis_kendaraan') == 'Bus' ? 'selected' : '' }}>Bus</option>
+                            </select>
+                        </div>
                         @error('jenis_kendaraan')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
+
                     <div class="text-center mt-3">
                         <p class="fw-medium text-muted">Atau gunakan fitur otomatis:</p>
                         <div class="d-flex justify-content-center gap-2">
@@ -337,7 +367,7 @@
                                 <div class="captured-image mt-2" style="display: none;">
                                     <img id="captured-image" style="max-width: 100%; max-height: 200px;" />
                                 </div>
-                                <!-- Tambahkan di dalam div camera-container -->
+                                <!-- Panduan visual untuk plat nomor -->
                                 <div class="plate-guide-overlay">
                                     <div class="plate-frame"></div>
                                     <div class="plate-instruction">Posisikan plat nomor dalam kotak</div>
@@ -644,9 +674,6 @@ $(document).ready(function() {
                         });
                         stopScanner();
                     }
-                });
-            });
-        }
     });
 
     // Stop Scanner
@@ -687,9 +714,9 @@ $(document).ready(function() {
 </script>
 
 <script>
-// OCR System Implementation - Dengan pilihan kamera opsional
+// AI-based OCR System untuk Plat Nomor
 $(document).ready(function() {
-    console.log('Initializing OCR system with camera selection option...');
+    console.log('Initializing AI-based OCR system...');
     
     // Global variables
     let videoStream = null;
@@ -700,7 +727,6 @@ $(document).ready(function() {
     // Event handlers
     $(document).on('click', '#startCamera', function() {
         console.log('Start camera button clicked');
-        // Cek apakah perlu menampilkan pilihan kamera
         checkCamerasAndStart();
     });
     
@@ -714,19 +740,17 @@ $(document).ready(function() {
         takePicture();
     });
     
-    // Event untuk tombol switch camera
     $(document).on('click', '#switchCamera', function() {
         console.log('Switch camera button clicked');
         showCameraSelectionModal();
     });
     
-    // Reset on modal close
     $('#parkirModal').on('hidden.bs.modal', function() {
         console.log('Modal closed, stopping camera');
         stopCamera();
     });
     
-    // Periksa kamera dan mulai
+    // Check available cameras and start appropriate option
     function checkCamerasAndStart() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
             console.log('enumerateDevices() not supported, starting default camera');
@@ -734,8 +758,34 @@ $(document).ready(function() {
             return;
         }
         
-        // Periksa perangkat kamera yang tersedia
         navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                availableCameras = devices.filter(device => device.kind === 'videoinput');
+        // Periksa perangkat kamera yang tersedia
+                console.log('Available cameras:', availableCameras);
+                
+                if (availableCameras.length === 0) {
+                    // Tidak ada kamera yang tersedia
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tidak Ada Kamera',
+                        text: 'Tidak ditemukan kamera pada perangkat Anda',
+                        confirmButtonColor: '#dc3545'
+                    });
+                    return;
+                }
+                
+                if (availableCameras.length === 1) {
+                    // Hanya ada satu kamera, langsung gunakan
+                    console.log('Only one camera found, using it directly');
+                    selectedCameraId = availableCameras[0].deviceId;
+                    startCameraWithFallback(selectedCameraId);
+                } else {
+                    // Ada beberapa kamera, tampilkan pilihan
+                    console.log('Multiple cameras found, showing selection modal');
+                    showCameraSelectionModal();
+                }
+            })
             .then(devices => {
                 // Filter hanya perangkat video (kamera)
                 availableCameras = devices.filter(device => device.kind === 'videoinput');
@@ -766,7 +816,7 @@ $(document).ready(function() {
             .catch(err => {
                 console.error('Error enumerating devices:', err);
                 // Fallback ke kamera default jika gagal mendapatkan daftar
-                console.log('Falling back to default camera');
+               // console.log('Falling back to default camera');
                 startCameraWithFallback();
             });
     }
@@ -1037,11 +1087,11 @@ $(document).ready(function() {
         $('.captured-image').hide();
     }
     
-    // Take picture and process - multi-capture for better accuracy
+    // Fungsi untuk mengambil gambar dan mendeteksi plat (Gunakan raw text)
     function takePicture() {
         if (ocrInProgress) return;
         
-        console.log('Taking picture...');
+        console.log('Taking picture for AI processing...');
         const video = document.getElementById('camera-preview');
         const canvas = document.getElementById('canvas-preview');
         const capturedImage = document.getElementById('captured-image');
@@ -1055,81 +1105,255 @@ $(document).ready(function() {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Capture multiple images with slight delay for better accuracy
-        const captures = [];
-        let captureCount = 0;
-        const totalCaptures = 3;
+        // Draw video to canvas
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Show first capture
-        captureFrame();
+        // Display captured image
+        capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
+        $('.captured-image').show();
         
-        // Function to capture a single frame
-        function captureFrame() {
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Display the first captured image
-            if (captureCount === 0) {
-                capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
-                $('.captured-image').show();
-            }
-            
-            // Process this frame
-            const processedCanvas = enhancePlateImage(canvas);
-            captures.push(processedCanvas);
-            
-            captureCount++;
-            
-            // Capture more frames or process if done
-            if (captureCount < totalCaptures) {
-                setTimeout(captureFrame, 200); // 200ms delay between captures
-            } else {
-                // Process all captured frames
-                processMultipleCaptures(captures);
-            }
+        // Get image data for API
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        
+        // Console log image data length for debugging
+        console.log("Image data length:", imageData.length);
+        if (imageData.length < 1000) {
+            console.error("Image data too small, might not be valid");
+            $('#loading-indicator').hide();
+            ocrInProgress = false;
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Gambar tidak valid. Silakan coba lagi.',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
         }
+        
+        // Process with Tesseract or API
+        processWithOCR(imageData)
+            .then(result => {
+                // Isi form dengan hasil OCR
+                fillPlateInputs(result);
+                
+                // Highlight input fields untuk menunjukkan pengguna bisa mengedit
+                highlightInputsForEditing();
+                
+                // Fokus ke input region untuk memudahkan pengeditan
+                $('.plate-region').focus();
+            });
     }
+    
+    function highlightInputsForEditing() {
+        $('.plate-region, .plate-number, .plate-suffix').addClass('highlight-for-edit');
+        
+        setTimeout(() => {
+            $('.plate-region, .plate-number, .plate-suffix').removeClass('highlight-for-edit');
+        }, 2000);
+    }
+    
+    console.log('OCR system with camera selection initialized');
+});
 
-    // Process multiple captures and select the best result
-    function processMultipleCaptures(canvases) {
-        const ocrPromises = canvases.map(canvas => {
-            return Tesseract.recognize(
-                canvas.toDataURL('image/jpeg'),
+function improveOCRResult(text) {
+    // Convert to uppercase and trim spaces
+    let plate = text.toUpperCase().trim();
+    
+    // Bersihkan spasi berlebih (contoh: "B  2374  KH" → "B 2374 KH")
+    plate = plate.replace(/\s+/g, ' ');
+    
+    // Koreksi kesalahan umum OCR
+    const commonCorrections = {
+        '0': 'O',  // angka 0 sering terdeteksi sebagai huruf O  
+        'Q': 'O',  // Q sering terdeteksi sebagai O
+        'I': '1',  // I sering terdeteksi sebagai 1 pada bagian angka
+        'S': '5',  // huruf S kadang terdeteksi sebagai angka 5
+        'Z': '2',  // Z kadang terdeteksi sebagai 2
+        'G': '6',  // G kadang terdeteksi sebagai 6
+        'D': '0',  // D kadang terdeteksi sebagai 0
+        'U': 'V',  // U kadang terdeteksi sebagai V
+    };
+    
+    // Deteksi jika ini adalah pola plat nomor (huruf-angka-huruf)
+    const platePattern = /([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})/;
+    const match = plate.match(platePattern);
+    
+    if (match) {
+        // Jika sesuai pola plat, koreksi setiap bagian dengan tepat
+        let region = match[1];     // Huruf daerah (contoh: B, D, AB)
+        let numbers = match[2];    // Bagian angka (contoh: 1234)
+        let letters = match[3];    // Bagian huruf (contoh: ABC)
+        
+        // Pada bagian angka, ganti huruf yang mungkin salah baca
+        numbers = numbers.replace(/O/g, '0');
+        numbers = numbers.replace(/I/g, '1');
+        numbers = numbers.replace(/S/g, '5');
+        numbers = numbers.replace(/Z/g, '2');
+        
+        // Pada bagian huruf, ganti angka yang mungkin salah baca
+        letters = letters.replace(/0/g, 'O');
+        letters = letters.replace(/1/g, 'I');
+        letters = letters.replace(/5/g, 'S');
+        letters = letters.replace(/2/g, 'Z');
+        
+        // Buat hasil yang terkoreksi dengan format standar
+        return `${region} ${numbers} ${letters}`;
+    }
+    
+    // Jika tidak sesuai pola, kembalikan teks asli yang sudah dibersihkan
+    return plate;
+}
+</script>
+
+<script>
+// Script untuk highlight dan saran
+$(document).ready(function() {
+    // Saat input berubah, periksa format
+    $('#plat_nomor').on('input', function() {
+        let value = $(this).val().toUpperCase();
+        $(this).val(value);
+        
+        // Periksa pola standar plat nomor Indonesia
+        const platePattern = /^([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})$/;
+        if (!platePattern.test(value)) {
+            $(this).addClass('is-invalid');
+            
+            // Coba sarankan format yang benar
+            const match = value.match(/([A-Z]{1,2})[^A-Z0-9]*([0-9]{1,4})[^A-Z0-9]*([A-Z]{1,3})/i);
+            if (match) {
+                const suggestion = `${match[1]} ${match[2]} ${match[3]}`.toUpperCase();
+                $('#plate-suggestion-text').text(suggestion);
+                $('#plate-suggestion').removeClass('d-none');
+                
+                $('#use-suggestion').off('click').on('click', function(e) {
+                    e.preventDefault();
+                    $('#plat_nomor').val(suggestion).removeClass('is-invalid');
+                    $('#plate-suggestion').addClass('d-none');
+                });
+            } else {
+                $('#plate-suggestion').addClass('d-none');
+            }
+        } else {
+            $(this).removeClass('is-invalid');
+            $('#plate-suggestion').addClass('d-none');
+        }
+    });
+    
+    // Tombol edit: fokuskan input dan seleksi isinya
+    $('.plate-edit-btn').click(function() {
+        $('#plat_nomor').focus().select();
+    });
+});
+</script>
+
+<script>
+async function recognizeWithMultipleMethods(imageData) {
+    // Metode 1: Tesseract with default settings
+    const result1 = await Tesseract.recognize(
+        imageData,
+        'eng',
+        { tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' }
+    );
+    
+    // Metode 2: Tesseract with contrast enhancement
+    const enhancedCanvas = enhancePlateImage(canvas.cloneNode(true));
+    const result2 = await Tesseract.recognize(
+        enhancedCanvas.toDataURL('image/jpeg'),
+        'eng',
+        { tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' }
+    );
+    
+    // Metode 3: Server-side OCR using EasyOCR
+    const apiResult = await $.ajax({
+        url: '/api/detect-plate',
+        method: 'POST',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            image: imageData
+        }
+    });
+    
+    console.log('Results from multiple methods:');
+    console.log('Tesseract basic:', result1.data.text);
+    console.log('Tesseract enhanced:', result2.data.text);
+    console.log('EasyOCR:', apiResult.raw_text);
+    
+    // Voting mechanism - parsePlateNumber tries each result
+    // and returns the most likely valid plate number
+    return findBestPlateNumber([
+        result1.data.text,
+        result2.data.text,
+        apiResult.raw_text
+    ]);
+}
+
+function findBestPlateNumber(results) {
+    // Filter valid-looking plates
+    const platPattern = /([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})/;
+    
+    // Find valid matches
+    const validResults = results
+        .map(text => text.trim().toUpperCase())
+        .filter(text => platPattern.test(text));
+    
+    // Return first valid match or the first result
+    return validResults.length > 0 ? validResults[0] : results[0].trim().toUpperCase();
+}
+</script>
+
+<script>
+// Tambahkan setelah fungsi enhancePlateImage
+// dan sebelum console.log('OCR system with camera selection initialized')
+
+// Fungsi untuk memproses gambar dengan OCR
+// Perbaiki fungsi processWithOCR
+async function processWithOCR(imageData) {
+    return new Promise((resolve, reject) => {
+        // Gunakan canvas untuk preprocessing
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        const img = new Image();
+        img.onload = function() {
+            // Atur ukuran canvas
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            
+            // Gambar ke canvas
+            tempCtx.drawImage(img, 0, 0);
+            
+            // Terapkan peningkatan gambar
+            const enhancedCanvas = window.enhancePlateImage(tempCanvas);
+            
+            // Process with Tesseract
+            Tesseract.recognize(
+                enhancedCanvas.toDataURL('image/jpeg'),
                 'eng',
                 { 
                     logger: m => console.log('OCR progress:', m.status || m),
                     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
-                    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE
+                    tessedit_pageseg_mode: '7',  // Treat image as single text line
+                    preserve_interword_spaces: '0',
+                    tessjs_create_hocr: '0',
+                    tessjs_create_tsv: '0'
                 }
-            ).then(result => {
-                return formatPlateNumber(result.data.text);
-            });
-        });
-        
-        // Process all OCR results
-        Promise.all(ocrPromises)
-            .then(results => {
-                console.log('Multiple OCR results:', results);
+            )
+            .then(result => {
+                const rawText = result.data.text.trim().toUpperCase();
+                console.log('OCR raw result:', rawText);
+                window.ocrInProgress = false; // Use window to ensure global scope
+                $('#loading-indicator').hide();
                 
-                // Find the most common result (voting)
-                const counts = {};
-                let maxCount = 0;
-                let bestPlate = '';
-                
-                results.forEach(plate => {
-                    counts[plate] = (counts[plate] || 0) + 1;
-                    if (counts[plate] > maxCount) {
-                        maxCount = counts[plate];
-                        bestPlate = plate;
-                    }
-                });
-                
-                // Use the most common result or the first valid one
-                const finalPlate = bestPlate || results.find(r => isValidPlateFormat(r)) || results[0];
-                
-                $('#plat_nomor').val(finalPlate);
+                // Langsung isi field tunggal (bukan segmented)
+                $('#plat_nomor').val(rawText);
                 $('#loading-indicator').hide();
                 ocrInProgress = false;
+                
+                // Highlight efek pada field
+                $('#plat_nomor').addClass('highlight-for-edit');
+                setTimeout(() => {
+                    $('#plat_nomor').removeClass('highlight-for-edit');
+                }, 2000);
                 
                 Swal.fire({
                     icon: 'success',
@@ -1140,11 +1364,13 @@ $(document).ready(function() {
                 });
                 
                 stopCamera();
+                
+                resolve(rawText);
             })
             .catch(error => {
                 console.error('OCR error:', error);
                 $('#loading-indicator').hide();
-                ocrInProgress = false;
+                window.ocrInProgress = false;
                 
                 Swal.fire({
                     icon: 'error',
@@ -1152,119 +1378,48 @@ $(document).ready(function() {
                     text: 'Gagal mengenali plat nomor. Silakan coba lagi.',
                     confirmButtonColor: '#dc3545'
                 });
+                
+                reject(error);
             });
-    }
-    
-    // Enhance image for better OCR results
-    function enhancePlateImage(canvas) {
-        const newCanvas = document.createElement('canvas');
-        const ctx = newCanvas.getContext('2d');
-        
-        newCanvas.width = canvas.width;
-        newCanvas.height = canvas.height;
-        
-        // Step 1: Draw original image
-        ctx.drawImage(canvas, 0, 0);
-        
-        // Step 2: Get image data
-        const imageData = ctx.getImageData(0, 0, newCanvas.width, newCanvas.height);
-        const data = imageData.data;
-        
-        // Step 3: Convert to grayscale with custom weights for license plates
-        // License plates often have strong contrast between characters and background
-        for (let i = 0; i < data.length; i += 4) {
-            // Modified weights to better detect dark characters on light background
-            const gray = 0.35 * data[i] + 0.45 * data[i+1] + 0.2 * data[i+2];
-            data[i] = data[i+1] = data[i+2] = gray;
-        }
-        
-        // Step 4: Apply adaptive contrast enhancement
-        const contrastFactor = 2.0; // Higher contrast
-        const brightness = 10;      // Slight brightness boost
-        
-        for (let i = 0; i < data.length; i += 4) {
-            const value = data[i];
-            // Apply contrast with brightness adjustment
-            const newValue = 128 + contrastFactor * (value - 128) + brightness;
-            data[i] = data[i+1] = data[i+2] = Math.max(0, Math.min(255, newValue));
-        }
-        
-        // Step 5: Apply simple thresholding
-        // This creates black and white image, helping with text recognition
-        const threshold = 140; // Adjust based on testing
-        for (let i = 0; i < data.length; i += 4) {
-            // Binary threshold
-            const val = data[i] > threshold ? 255 : 0;
-            data[i] = data[i+1] = data[i+2] = val;
-        }
-        
-        // Step 6: Update canvas with processed image
-        ctx.putImageData(imageData, 0, 0);
-        
-        return newCanvas;
-    }
-    
-    // Format plate number text
-    function formatPlateNumber(text) {
-        // Clean up and normalize
-        let cleaned = text.replace(/\s+/g, '').toUpperCase();
-        cleaned = cleaned.replace(/[^A-Z0-9]/g, '');
-        
-        // Fix common OCR mistakes for Indonesian plates
-        const corrections = {
-            '0': 'O', '1': 'I', '5': 'S', '8': 'B',
-            '2': 'Z', '6': 'G', '4': 'A'
         };
         
-        for (const [wrong, correct] of Object.entries(corrections)) {
-            const re = new RegExp(wrong, 'g');
-            
-            // Apply corrections only to specific positions based on Indonesian plate patterns
-            if (['0', '1', '5', '8'].includes(wrong)) {
-                // These are likely errors in the letter parts
-                cleaned = cleaned.replace(new RegExp(`^(.*?)([A-Z]*)(${wrong})([A-Z]*)(.*)$`), 
-                    (match, p1, p2, p3, p4, p5) => `${p1}${p2}${correct}${p4}${p5}`);
-            } else {
-                // Apply general corrections
-                cleaned = cleaned.replace(re, correct);
-            }
-        }
+        img.onerror = function(error) {
+            console.error('Error loading image:', error);
+            $('#loading-indicator').hide();
+            window.ocrInProgress = false;
+            reject(error);
+        };
         
-        // Try to match Indonesian license plate formats
-        // Format: 1-2 letters + 1-4 numbers + 1-3 letters (e.g., B1234CD)
-        const plateRegex = /([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})/;
-        const match = cleaned.match(plateRegex);
-        
-        if (match) {
-            // Format with spaces
-            return `${match[1]} ${match[2]} ${match[3]}`;
-        }
-        
-        // Try alternate patterns
-        // Some plates might be detected partially
-        const alternateRegex1 = /([A-Z]{1,2})(\d{1,4})/; // e.g., B1234
-        const alternateRegex2 = /(\d{1,4})([A-Z]{1,3})/; // e.g., 1234CD
-        
-        const match1 = cleaned.match(alternateRegex1);
-        if (match1) {
-            return `${match1[1]} ${match1[2]}`;
-        }
-        
-        const match2 = cleaned.match(alternateRegex2);
-        if (match2) {
-            return `${match2[1]} ${match2[2]}`;
-        }
-        
-        // If no match found, return cleaned text
-        return cleaned;
-    }
+        img.src = imageData;
+    });
+}
+</script>
+
+
+<script>
+$(document).ready(function() {
+    // Update hidden input saat nilai berubah
+    $('.plate-region, .plate-number, .plate-suffix').on('input', function() {
+        updatePlatNomorInput();
+    });
     
-    // Detect if device is mobile
-    function isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    }
+    // Format nilai saat diketik
+    $('.plate-region, .plate-suffix').on('input', function() {
+        $(this).val($(this).val().toUpperCase());
+    });
     
-    console.log('OCR system with camera selection initialized');
+    // Auto focus ke input berikutnya
+    $('.plate-region').on('keyup', function() {
+        if ($(this).val().length >= parseInt($(this).attr('maxlength'))) {
+            $('.plate-number').focus();
+        }
+    });
+    
+    $('.plate-number').on('keyup', function() {
+        if ($(this).val().length >= parseInt($(this).attr('maxlength'))) {
+            $('.plate-suffix').focus();
+        }
+    });
 });
 </script>
 
@@ -1366,6 +1521,7 @@ $(document).ready(function() {
         border-radius: 8px;
         padding: 15px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: relative;
     }
     
     #camera-preview {
@@ -1398,7 +1554,17 @@ $(document).ready(function() {
         z-index: 5;
     }
 
-    
+    .plate-frame {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        height: 30%;
+        border: 3px dashed rgba(255, 255, 0, 0.8);
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
 
     .plate-instruction {
         position: absolute;
@@ -1414,6 +1580,26 @@ $(document).ready(function() {
         margin: 0 auto;
         width: fit-content;
     }
+</style>
+
+<style>
+/* Styling untuk dropdown jenis kendaraan */
+#jenis_kendaraan {
+    height: calc(1.5em + 0.75rem + 2px);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.input-group-text i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Styling untuk highlight pada select */
+select.highlight-for-edit {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    transition: background-color 0.5s ease;
+}
 </style>
 @endpush
 
@@ -1659,8 +1845,10 @@ $(document).ready(function() {
     console.log('Initializing OCR system with fallback options...');
     
     // Global variables
-    let videoStream = null;
-    let ocrInProgress = false;
+    // let videoStream = null;
+    // let ocrInProgress = false;
+    window.videoStream = null; // Use window to ensure global scope
+    window.ocrInProgress = false; // Use window to ensure global scope
     
     // Event handlers
     $(document).on('click', '#startCamera', function() {
@@ -1873,17 +2061,31 @@ $(document).ready(function() {
             'eng',
             { 
                 logger: m => console.log('OCR progress:', m.status || m),
-                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '
+                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
+                tessedit_pageseg_mode: '7',  // Treat image as single text line
+                preserve_interword_spaces: '0',
+                tessjs_create_hocr: '0',
+                tessjs_create_tsv: '0'
             }
         )
         .then(result => {
-            console.log('OCR raw result:', result.data.text);
-            const plateNumber = formatPlateNumber(result.data.text);
-            console.log('Formatted plate number:', plateNumber);
+            const rawText = result.data.text.trim();
+            console.log('OCR raw result:', rawText);
             
-            $('#plat_nomor').val(plateNumber);
+            // Terapkan koreksi ringan
+            const improvedText = improveOCRResult(rawText);
+            console.log('Improved OCR result:', improvedText);
+            
+            // Langsung isi field tunggal (bukan segmented)
+            $('#plat_nomor').val(improvedText);
             $('#loading-indicator').hide();
             ocrInProgress = false;
+            
+            // Highlight efek pada field
+            $('#plat_nomor').addClass('highlight-for-edit');
+            setTimeout(() => {
+                $('#plat_nomor').removeClass('highlight-for-edit');
+            }, 2000);
             
             Swal.fire({
                 icon: 'success',
@@ -1910,94 +2112,36 @@ $(document).ready(function() {
     }
     
     // Enhance image for better OCR results
-    function enhancePlateImage(canvas) {
-        const newCanvas = document.createElement('canvas');
-        const ctx = newCanvas.getContext('2d');
-        
-        newCanvas.width = canvas.width;
-        newCanvas.height = canvas.height;
-        
-        // Step 1: Draw original image
-        ctx.drawImage(canvas, 0, 0);
-        
-        // Step 2: Get image data
-        const imageData = ctx.getImageData(0, 0, newCanvas.width, newCanvas.height);
+    window.enhancePlateImage = function(canvas) {
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
         
-        // Step 3: Convert to grayscale
+        // Tingkatkan kontras
+        const contrast = 1.5; // Nilai tinggi = kontras lebih tinggi
+        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+        
         for (let i = 0; i < data.length; i += 4) {
-            const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-            data[i] = data[i+1] = data[i+2] = gray;
-        }
-        
-        // Step 4: Increase contrast
-        const contrastFactor = 1.5;
-        for (let i = 0; i < data.length; i += 4) {
-            const value = data[i];
-            const newValue = 128 + contrastFactor * (value - 128);
-            data[i] = data[i+1] = data[i+2] = Math.max(0, Math.min(255, newValue));
-        }
-        
-        // Step 5: Update canvas with processed image
-        ctx.putImageData(imageData, 0, 0);
-        
-        return newCanvas;
-    }
-    
-    // Format plate number text
-    function formatPlateNumber(text) {
-        // Clean up and normalize
-        let cleaned = text.replace(/\s+/g, '').toUpperCase();
-        cleaned = cleaned.replace(/[^A-Z0-9]/g, '');
-        
-        // Fix common OCR mistakes for Indonesian plates
-        const corrections = {
-            '0': 'O', '1': 'I', '5': 'S', '8': 'B',
-            '2': 'Z', '6': 'G', '4': 'A'
-        };
-        
-        for (const [wrong, correct] of Object.entries(corrections)) {
-            const re = new RegExp(wrong, 'g');
+            // Konversi ke grayscale
+            const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
             
-            // Apply corrections only to specific positions based on Indonesian plate patterns
-            if (['0', '1', '5', '8'].includes(wrong)) {
-                // These are likely errors in the letter parts
-                cleaned = cleaned.replace(new RegExp(`^(.*?)([A-Z]*)(${wrong})([A-Z]*)(.*)$`), 
-                    (match, p1, p2, p3, p4, p5) => `${p1}${p2}${correct}${p4}${p5}`);
+            // Tingkatkan kontras
+            data[i] = factor * (gray - 128) + 128;     // R
+            data[i + 1] = factor * (gray - 128) + 128; // G
+            data[i + 2] = factor * (gray - 128) + 128; // B
+            
+            // Binarization (threshold)
+            const threshold = 150;
+            if (data[i] > threshold) {
+                data[i] = data[i+1] = data[i+2] = 255; // Putih
             } else {
-                // Apply general corrections
-                cleaned = cleaned.replace(re, correct);
+                data[i] = data[i+1] = data[i+2] = 0;   // Hitam
             }
         }
         
-        // Try to match Indonesian license plate formats
-        // Format: 1-2 letters + 1-4 numbers + 1-3 letters (e.g., B1234CD)
-        const plateRegex = /([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})/;
-        const match = cleaned.match(plateRegex);
-        
-        if (match) {
-            // Format with spaces
-            return `${match[1]} ${match[2]} ${match[3]}`;
-        }
-        
-        // Try alternate patterns
-        // Some plates might be detected partially
-        const alternateRegex1 = /([A-Z]{1,2})(\d{1,4})/; // e.g., B1234
-        const alternateRegex2 = /(\d{1,4})([A-Z]{1,3})/; // e.g., 1234CD
-        
-        const match1 = cleaned.match(alternateRegex1);
-        if (match1) {
-            return `${match1[1]} ${match1[2]}`;
-        }
-        
-        const match2 = cleaned.match(alternateRegex2);
-        if (match2) {
-            return `${match2[1]} ${match2[2]}`;
-        }
-        
-        // If no match found, return cleaned text
-        return cleaned;
-    }
+        ctx.putImageData(imageData, 0, 0);
+        return canvas;
+    };
     
     console.log('OCR system initialized with improved error handling');
 });
@@ -2054,5 +2198,10 @@ $(document).ready(function() {
         box-shadow: none;
         background-color: #fff;
     }
+
+    .highlight-for-edit {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    transition: background-color 0.5s ease;
+}
 </style>
 @endpush

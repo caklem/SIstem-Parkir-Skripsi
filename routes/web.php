@@ -5,6 +5,7 @@ use App\Http\Controllers\ParkirController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QRCodeController;
 use App\Http\Controllers\PlateOCRController;
+use App\Http\Controllers\PlateDetectionController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -84,3 +85,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/ocr/log-result', [PlateOCRController::class, 'logOcrResult'])->name('ocr.log-result');
     Route::post('ocr/validate-plate', [PlateOCRController::class, 'validatePlate'])->name('ocr.validate-plate');
 });
+
+// Tambahkan ini di antara route-route yang sudah ada
+Route::post('/api/detect-plate', [PlateDetectionController::class, 'detectPlate'])->name('api.detect-plate');

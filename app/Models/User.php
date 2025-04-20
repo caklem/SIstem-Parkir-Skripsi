@@ -41,4 +41,44 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the user's roles.
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+    
+    /**
+     * Check if user has a role
+     */
+    public function hasRole($roleName)
+    {
+        return $this->roles->where('name', $roleName)->count() > 0;
+    }
+    
+    /**
+     * Get user's role (singular, for compatibility)
+     */
+    public function role()
+    {
+        return $this->roles()->first();
+    }
+    
+    /**
+     * Check if user is management
+     */
+    public function isManagement()
+    {
+        return $this->hasRole('management');
+    }
+    
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
 }
