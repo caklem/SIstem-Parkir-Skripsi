@@ -4,122 +4,159 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class PlateDetectionController extends Controller
 {
-    public function detectPlate(Request $request)
+    /**
+     * Detect license plate from image
+     */
+    public function detect(Request $request)
     {
-        Log::info('Plate detection request received');
-        
-        // Validasi input
-        $validated = $request->validate([
-            'image' => 'required|string' // Base64 encoded image
+        // Log request for debugging
+        Log::info('Plate detection request received', [
+            'has_image' => $request->has('image'),
+            'image_size' => $request->has('image') ? strlen($request->input('image')) : 0
         ]);
         
         try {
-            // Buat direktori untuk temporary file jika belum ada
-            $tempDir = storage_path('app/public/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-            
-            // Decode base64 image
-            $image = $this->decodeBase64Image($validated['image']);
-            
-            // Verifikasi ukuran
-            if (strlen($image) < 100) {
-                Log::error('Decoded image too small: ' . strlen($image) . ' bytes');
+            // Validasi input
+            if (!$request->has('image') || empty($request->input('image'))) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid image data (too small)'
+                    'message' => 'Gambar tidak ditemukan dalam request'
                 ], 400);
             }
             
-            // Simpan gambar untuk diproses
-            $filename = 'plate_' . Str::random(10) . '.jpg';
-            $path = $tempDir . '/' . $filename;
-            file_put_contents($path, $image);
+            // Decode base64 image
+            $image = $request->input('image');
+            $image = str_replace('data:image/jpeg;base64,', '', $image);
+            $image = str_replace('data:image/png;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
             
-            // Verifikasi file gambar valid
-            if (!file_exists($path) || filesize($path) < 100) {
-                Log::error('Saved image invalid or too small: ' . filesize($path) . ' bytes');
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to save valid image'
-                ], 500);
+            // Create temp directory if it doesn't exist
+            $tempPath = storage_path('app/temp');
+            if (!file_exists($tempPath)) {
+                mkdir($tempPath, 0755, true);
             }
             
-            Log::info('Image saved for processing: ' . $path);
+            // Save image to a temporary file
+            $fileName = 'plate_' . time() . '_' . Str::random(10) . '.jpg';
+            $filePath = $tempPath . '/' . $fileName;
+            file_put_contents($filePath, base64_decode($image));
             
-            // Menggunakan path absolut ke Python dalam virtual environment
-            $pythonPath = base_path('venv_tensorflow\Scripts\python.exe');
-            $pythonScript = base_path('python/detect_plate_easyocr.py');
+            // Log info
+            $filesize = filesize($filePath);
+            Log::info('Image saved for plate detection', [
+                'path' => $filePath, 
+                'size' => $filesize
+            ]);
             
-            // Jalankan script dengan shell_exec
-            $command = "\"$pythonPath\" \"$pythonScript\" \"$path\" 2>&1";
+            // SIMPLIFIED: Return mock data for initial testing
+            // return response()->json([
+            //     'success' => true,
+            //     'plate_number' => 'B 1234 XYZ',
+            //     'confidence' => 0.95,
+            //     'method' => 'test_response',
+            //     'processing_time' => '0.1 seconds'
+            // ]);
             
-            Log::info('Executing command: ' . $command);
-            $output = shell_exec($command);
-            Log::info('Raw Python script output: ' . $output);
+            // COMMENTED OUT FOR INITIAL TESTING - Uncomment after fixing connectivity
             
-            // Periksa jika output kosong
-            if (empty($output)) {
-                Log::error('Python script produced no output');
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Python script execution failed (no output)'
-                ], 500);
+            // Path to Python script
+            $pythonScript = base_path('python/plate_detection_opencv.py');
+            $pythonPath = $this->getPythonPath();
+            
+            // Execute Python script
+            $process = new Process([
+                $pythonPath,
+                $pythonScript,
+                $filePath
+            ]);
+            
+            $process->setTimeout(180);
+            $process->run();
+            
+            // Check process result
+            if (!$process->isSuccessful()) {
+                Log::error('Plate detection process failed', [
+                    'error' => $process->getErrorOutput(),
+                    'exitCode' => $process->getExitCode()
+                ]);
+                
+                throw new ProcessFailedException($process);
             }
             
-            // Parse output sebagai JSON
+            // Get output
+            $output = $process->getOutput();
             $result = json_decode($output, true);
             
-            // Check if JSON parsing failed
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::error('Failed to parse JSON: ' . json_last_error_msg());
-                Log::error('Raw output: ' . $output);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to parse script output as JSON',
-                    'raw_output' => $output
-                ], 500);
-            }
-            
-            // Hapus file temporary
-            if (file_exists($path)) {
-                unlink($path);
-            }
-            
-            // Hapus file hasil preprocessing jika ada
-            $platePath = str_replace('.jpg', '_plate.jpg', $path);
-            $enhancedPath = str_replace('.jpg', '_enhanced.jpg', $path);
-            
-            if (file_exists($platePath)) unlink($platePath);
-            if (file_exists($enhancedPath)) unlink($enhancedPath);
-            
-            // Return hasil
+            // Return result
             return response()->json($result);
             
         } catch (\Exception $e) {
-            Log::error('Plate detection error: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
+            Log::error('Error in plate detection: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error processing image: ' . $e->getMessage()
             ], 500);
         }
     }
     
-    private function decodeBase64Image($base64String)
+    /**
+     * Show a debug image
+     */
+    public function showDebugImage($filename)
     {
-        // Remove data URL header if present
-        if (strpos($base64String, ';base64,') !== false) {
-            list(, $base64String) = explode(';base64,', $base64String);
+        $path = storage_path('app/temp/' . $filename);
+        
+        if (!file_exists($path)) {
+            abort(404, 'Image not found');
         }
         
-        return base64_decode($base64String);
+        return response()->file($path);
     }
+    
+    /**
+     * Get Python executable path
+     */
+    private function getPythonPath()
+    {
+        // Cek di virtual environment
+        $venvPath = base_path('python/venv_ocr/Scripts/python.exe');
+        if (file_exists($venvPath)) {
+            return $venvPath;
+        }
+        
+        // Cek beberapa lokasi instalasi Python umum di Windows
+        $possiblePaths = [
+            'C:\Python39\python.exe',
+            'C:\Python310\python.exe',
+            'C:\Python311\python.exe',
+            'C:\Program Files\Python39\python.exe',
+            'C:\Program Files\Python310\python.exe',
+            'C:\Program Files\Python311\python.exe',
+            'C:\Users\Admin\AppData\Local\Programs\Python\Python39\python.exe',
+            'C:\Users\Admin\AppData\Local\Programs\Python\Python310\python.exe',
+            'C:\Users\Admin\AppData\Local\Programs\Python\Python311\python.exe',
+        ];
+        
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+        
+        // Gunakan python dari PATH
+        return 'python';
+    }
+
+    
 }

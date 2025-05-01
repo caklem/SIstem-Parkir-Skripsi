@@ -1,0 +1,89 @@
+.highlight-for-edit {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    animation: highlightFade 2s;
+}
+
+@keyframes highlightFade {
+    from {
+        background-color: #d4edda;
+    }
+    to {
+        background-color: #fff;
+    }
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+#camera-preview {
+    width: 100%;
+    max-height: 480px;
+    background-color: #000;
+}
+
+.captured-image {
+    margin-top: 10px;
+    text-align: center;
+}
+
+#captured-image {
+    max-width: 100%;
+    max-height: 300px;
+    border: 1px solid #ddd;
+}
+
+#loading-indicator {
+    text-align: center;
+    margin: 10px 0;
+}
+
+#browser-processing-message {
+    font-size: 14px;
+    color: #0066cc;
+}
+
+.btn-space {
+    margin-right: 5px;
+}
+
+/* CSS untuk format plat Indonesia */
+
+.plate-preview {
+    font-family: "Roboto Mono", monospace;
+    background-color: #fff;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 4px;
+    padding: 8px 12px;
+    display: inline-block;
+    letter-spacing: 2px;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.auto-detection-info {
+    font-size: 12px;
+    color: #6c757d;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.detection-result {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    margin-top: 10px;
+}
+
+.detection-result .confidence {
+    font-size: 12px;
+    color: #6c757d;
+}
