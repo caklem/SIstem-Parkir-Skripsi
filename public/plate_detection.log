@@ -1,0 +1,27 @@
+2025-04-29 20:55:17,169 - plate_detector - INFO - Using default model: C:\xampp3\htdocs\sistem-parkir\python\yolov5\yolov5s.pt
+2025-04-29 20:55:17,169 - plate_detector - INFO - Processing image: C:\xampp3\htdocs\sistem-parkir\storage\app/temp/plate_1745934903_rTaeYi8la0.jpg, shape: (480, 640, 3)
+2025-04-29 20:55:26,598 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-29 20:55:35,601 - plate_detector - INFO - No plate found in vehicles, trying whole image
+2025-04-29 20:55:42,588 - plate_detector - WARNING - No plate found
+2025-04-29 20:56:16,394 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 11:35:59,664 - plate_detector - INFO - Using default model: C:\xampp3\htdocs\sistem-parkir\python\yolov5\yolov5s.pt
+2025-04-30 11:35:59,710 - plate_detector - INFO - Processing image: C:\xampp3\htdocs\sistem-parkir\storage\app/temp/plate_1745987730_Yr5ZDCmhb4.jpg, shape: (480, 640, 3)
+2025-04-30 11:36:14,095 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 11:36:27,797 - plate_detector - INFO - No plate found in vehicles, trying whole image
+2025-04-30 11:36:40,395 - plate_detector - INFO - Final plate number: 05 26 (confidence: 0.84)
+2025-04-30 11:36:42,476 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 11:52:19,212 - plate_detector - INFO - Using default model: C:\xampp3\htdocs\sistem-parkir\python\yolov5\yolov5s.pt
+2025-04-30 11:52:19,213 - plate_detector - INFO - Processing image: C:\xampp3\htdocs\sistem-parkir\storage\app/temp/plate_1745988723_tRGABebXbA.jpg, shape: (480, 640, 3)
+2025-04-30 11:52:27,852 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 11:52:39,144 - plate_detector - INFO - No plate found in vehicles, trying whole image
+2025-04-30 11:52:47,280 - plate_detector - INFO - Final plate number: 1001 222 (confidence: 0.56)
+2025-04-30 11:52:49,312 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 11:59:07,930 - plate_detector - INFO - Using default model: C:\xampp3\htdocs\sistem-parkir\python\yolov5\yolov5s.pt
+2025-04-30 11:59:07,944 - plate_detector - INFO - Processing image: C:\xampp3\htdocs\sistem-parkir\storage\app/temp/plate_1745989127_u4Lux2kcgc.jpg, shape: (480, 640, 3)
+2025-04-30 11:59:18,044 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 11:59:28,708 - plate_detector - INFO - No plate found in vehicles, trying whole image
+2025-04-30 11:59:36,707 - plate_detector - INFO - Final plate number: 05 26 (confidence: 0.89)
+2025-04-30 11:59:38,577 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 12:13:07,007 - plate_detector - INFO - Using default model: C:\xampp3\htdocs\sistem-parkir\python\yolov5\yolov5s.pt
+2025-04-30 12:14:44,409 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-04-30 12:15:01,611 - easyocr.easyocr - WARNING - Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.

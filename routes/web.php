@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QRCodeController;
 use App\Http\Controllers\PlateOCRController;
 use App\Http\Controllers\PlateDetectionController;
+use App\Http\Controllers\YoloPlateDetectionController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -86,5 +87,26 @@ Route::middleware('auth')->group(function () {
     Route::post('ocr/validate-plate', [PlateOCRController::class, 'validatePlate'])->name('ocr.validate-plate');
 });
 
-// Tambahkan ini di antara route-route yang sudah ada
-Route::post('/api/detect-plate', [PlateDetectionController::class, 'detectPlate'])->name('api.detect-plate');
+// Route to show debug images
+Route::get('/debug-image/{filename}', [PlateDetectionController::class, 'showDebugImage'])->name('debug-image');
+
+// Test route for plate detection
+Route::get('/test-plate-detection', function () {
+    return view('tests.plate-detection');
+});
+
+// Test route for plate API
+Route::get('/test-plate-api', function() {
+    return view('tests.plate-api-test');
+});
+
+// Route untuk deteksi plat (alternatif jika API route bermasalah)
+Route::post('/web-detect-plate', [PlateDetectionController::class, 'detect'])->name('web.detect-plate');
+
+// Direct web route for plate detection that works without API prefix
+Route::post('/detect-plate', [PlateDetectionController::class, 'detect'])->name('web.detect-plate');
+
+// web.php atau routes file Anda
+Route::post('/parkir/proses-keluar', [ParkirController::class, 'prosesKeluar'])->name('parkir.proses-keluar');
+//qrcode download
+Route::get('/qrcode/download/{nomorKartu}', [QrcodeController::class, 'downloadQrCode'])->name('qrcode.download');

@@ -289,15 +289,27 @@
             </div>
         </div>
 
-        <!-- Tabel Data Parkir -->
+        <!-- Tabel Data Parkir dengan Pencarian -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Data Parkir Masuk & Keluar Terbaru</h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="card-title">Data Parkir Masuk & Keluar Terbaru</h3>
+                            <div class="card-tools">
+                                <div class="input-group input-group-sm" style="width: 250px;">
+                                    <input type="text" name="table_search" id="parkirSearch" class="form-control float-right" placeholder="Cari (plat nomor, kartu)">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body table-responsive p-0">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="parkirTable">
                             <thead>
                                 <tr>
                                     <th>No Kartu</th>
@@ -310,7 +322,7 @@
                             </thead>
                             <tbody>
                                 @forelse($parkirHistory as $parkir)
-                                <tr>
+                                <tr class="parkir-row">
                                     <td>{{ $parkir->nomor_kartu }}</td>
                                     <td class="text-uppercase">{{ $parkir->plat_nomor }}</td>
                                     <td>
@@ -322,11 +334,11 @@
                                         </span>
                                     </td>
                                     <td>{{ Carbon\Carbon::parse($parkir->waktu_masuk)->format('d/m/Y H:i:s') }}</td>
-                                    <td>{{ Carbon\Carbon::parse($parkir->waktu_keluar)->format('d/m/Y H:i:s') }}</td>
+                                    <td>{{ $parkir->waktu_keluar ? Carbon\Carbon::parse($parkir->waktu_keluar)->format('d/m/Y H:i:s') : '-' }}</td>
                                     <td>{{ $parkir->durasi }}</td>
                                 </tr>
                                 @empty
-                                <tr>
+                                <tr id="no-data-row">
                                     <td colspan="6" class="text-center py-3">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
@@ -337,6 +349,11 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+                    <div class="card-footer clearfix" id="no-results" style="display: none;">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-search me-2"></i>Tidak ada hasil yang cocok dengan pencarian Anda
+                        </div>
                     </div>
                 </div>
             </div>
@@ -455,6 +472,36 @@ $(document).ready(function() {
         e.preventDefault();
         window.location.href = '{{ route("dashboard") }}?' + $(this).serialize();
     });
+
+    // Live search untuk tabel parkir
+$('#parkirSearch').on('keyup', function() {
+    const value = $(this).val().toLowerCase();
+    let found = false;
+    
+    $('.parkir-row').filter(function() {
+        const rowText = $(this).text().toLowerCase();
+        const isVisible = rowText.indexOf(value) > -1;
+        $(this).toggle(isVisible);
+        if (isVisible) found = true;
+    });
+    
+    // Show/hide "no results" message
+    if (value.length > 0) {
+        if (!found) {
+            $('#no-results').show();
+            $('#no-data-row').hide();
+        } else {
+            $('#no-results').hide();
+        }
+    } else {
+        $('#no-results').hide();
+        if ($('.parkir-row').length === 0) {
+            $('#no-data-row').show();
+        }
+    }
+});
+
+
 });
 </script>
 @endpush

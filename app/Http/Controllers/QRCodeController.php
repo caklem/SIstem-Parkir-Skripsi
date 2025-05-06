@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\QRCode;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode as QRGenerator;
+use Illuminate\Support\Facades\Log;
 
 class QRCodeController extends Controller
 {
@@ -115,4 +116,48 @@ class QRCodeController extends Controller
             return back()->with('error', 'Gagal menghapus QR Code');
         }
     }
+
+    // /**
+    //  * Download QR Code sebagai file gambar
+    //  *
+    //  * @param string $nomorKartu
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function downloadQrCode($nomorKartu)
+    // {
+    //     // Cek apakah QR code tersedia di database
+    //     $qrData = Qrcode::where('nomor_kartu', $nomorKartu)->first();
+    //     if (!$qrData) {
+    //         return redirect()->route('qrcode.list')->with('error', 'QR Code tidak ditemukan');
+    //     }
+
+    //     try {
+    //         // Generate QR Code dengan setting yang optimal untuk download
+    //         $qrcode = QrCode::format('png')
+    //             ->size(500) // Ukuran lebih besar untuk kualitas lebih baik
+    //             ->errorCorrection('H') // High error correction untuk ketahanan
+    //             ->margin(10)
+    //             ->backgroundColor(255, 255, 255)
+    //             ->color(0, 0, 0)
+    //             ->generate($nomorKartu);
+                
+    //         // Set header untuk download
+    //         $headers = [
+    //             'Content-Type' => 'image/png',
+    //             'Content-Disposition' => 'attachment; filename="qrcode-' . $nomorKartu . '.png"',
+    //             'Cache-Control' => 'no-cache, no-store, must-revalidate',
+    //             'Pragma' => 'no-cache',
+    //             'Expires' => '0'
+    //         ];
+
+    //         // Log aktivitas download
+    //         Log::info('QR Code diunduh', ['nomor_kartu' => $nomorKartu, 'user' => auth()->id() ?? 'guest']);
+            
+    //         return response($qrcode, 200, $headers);
+            
+    //     } catch (\Exception $e) {
+    //         Log::error('Error downloading QR Code', ['message' => $e->getMessage(), 'nomor_kartu' => $nomorKartu]);
+    //         return redirect()->route('qrcode.list')->with('error', 'Terjadi kesalahan saat mengunduh QR Code');
+    //     }
+    // }
 }

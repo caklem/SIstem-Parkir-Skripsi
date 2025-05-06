@@ -200,6 +200,21 @@ class ParkirController extends Controller
         return $durasi > 0 ? "$jam jam $menit menit" : '-';
     }
 
+    private function hitungRataRataRentangWaktu($startDate, $endDate)
+    {
+        $query = ParkirKeluar::selectRaw('AVG(TIMESTAMPDIFF(MINUTE, waktu_masuk, waktu_keluar)) as durasi')
+            ->whereBetween('waktu_keluar', [$startDate, $endDate]);
+        
+        $rataRata = $query->first();
+        $durasi = round($rataRata->durasi ?? 0);
+        
+        // Convert ke format jam:menit
+        $jam = floor($durasi / 60);
+        $menit = $durasi % 60;
+        
+        return $durasi > 0 ? "$jam jam $menit menit" : '-';
+    }
+
     public function store(Request $request)
     {
         try {
@@ -677,7 +692,7 @@ class ParkirController extends Controller
             $startDate = null;
             $endDate = null;
 
-            // Set date range
+            // Tentukan rentang tanggal berdasarkan filter yang dipilih
             switch ($range) {
                 case 'day':
                     $startDate = now()->startOfDay();
@@ -706,20 +721,76 @@ class ParkirController extends Controller
                     break;
             }
 
-            // Get data
+            // Statistik kendaraan masih aktif (belum keluar)
+            $kendaraanAktif = Parkir::count();
+
+            // Statistik kendaraan masuk SESUAI RENTANG WAKTU
+            $kendaraanMasuk = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])->count();
+            
+            // Statistik kendaraan keluar SESUAI RENTANG WAKTU
+            $kendaraanKeluar = ParkirKeluar::whereBetween('waktu_keluar', [$startDate, $endDate])->count();
+
+            // Statistik berdasarkan jenis kendaraan SESUAI RENTANG WAKTU
+            $mobilCount = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
+                ->where('jenis_kendaraan', 'Mobil')
+                ->count();
+                
+            $motorCount = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
+                ->where('jenis_kendaraan', 'Sepeda Motor')
+                ->count();
+                
+            $busCount = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
+                ->where('jenis_kendaraan', 'Bus')
+                ->count();
+
+            // Total kendaraan dalam periode
+            $totalKendaraanPeriode = $mobilCount + $motorCount + $busCount;
+            
+            // Rata-rata durasi parkir SESUAI RENTANG WAKTU
+            $rataRataDurasi = $this->hitungRataRataRentangWaktu($startDate, $endDate);
+            
+            // Statistik distribusi jenis kendaraan untuk grafik pie SESUAI RENTANG WAKTU
+            $jenisKendaraanData = ParkirKeluar::selectRaw('
+                jenis_kendaraan, 
+                COUNT(*) as total
+            ')
+            ->whereBetween('waktu_masuk', [$startDate, $endDate])
+            ->groupBy('jenis_kendaraan')
+            ->get();
+            
+            // Grafik kendaraan per hari dalam rentang waktu
+            $grafikHarian = ParkirKeluar::selectRaw('
+                DATE(waktu_masuk) as tanggal,
+                COUNT(*) as total,
+                SUM(CASE WHEN jenis_kendaraan = "Mobil" THEN 1 ELSE 0 END) as mobil,
+                SUM(CASE WHEN jenis_kendaraan = "Sepeda Motor" THEN 1 ELSE 0 END) as motor,
+                SUM(CASE WHEN jenis_kendaraan = "Bus" THEN 1 ELSE 0 END) as bus
+            ')
+            ->whereBetween('waktu_masuk', [$startDate, $endDate])
+            ->groupBy('tanggal')
+            ->orderBy('tanggal')
+            ->get();
+
+            // Gabungkan semua statistik dalam array
             $stats = [
-                'total_kendaraan_aktif' => Parkir::count(),
-                'total_masuk' => ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])->count(),
-                'total_keluar' => ParkirKeluar::whereBetween('waktu_keluar', [$startDate, $endDate])->count(),
-                'rata_rata_durasi' => $this->hitungRataRataDurasi(),
-                'mobil_hari_ini' => ParkirKeluar::whereDate('waktu_masuk', today())->where('jenis_kendaraan', 'Mobil')->count(),
-                'motor_hari_ini' => ParkirKeluar::whereDate('waktu_masuk', today())->where('jenis_kendaraan', 'Sepeda Motor')->count(),
-                'bus_hari_ini' => ParkirKeluar::whereDate('waktu_masuk', today())->where('jenis_kendaraan', 'Bus')->count(),
+                'total_kendaraan_aktif' => $kendaraanAktif,
+                'total_masuk' => $kendaraanMasuk,
+                'total_keluar' => $kendaraanKeluar,
+                'rata_rata_durasi' => $rataRataDurasi,
+                'distribusi_kendaraan' => [
+                    'mobil' => $mobilCount,
+                    'motor' => $motorCount,
+                    'bus' => $busCount
+                ],
+                'total_kendaraan_periode' => $totalKendaraanPeriode,
+                'jenis_kendaraan' => $jenisKendaraanData,
+                'grafik_harian' => $grafikHarian
             ];
 
+            // Ambil riwayat parkir dalam rentang waktu tertentu
             $parkirHistory = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
                 ->orderBy('waktu_masuk', 'desc')
-                ->take(20)
+                ->take(20)  // Batasi 20 data terbaru
                 ->get()
                 ->map(function($item) {
                     $masuk = Carbon::parse($item->waktu_masuk);
@@ -728,13 +799,20 @@ class ParkirController extends Controller
                     return $item;
                 });
 
+            // Generate PDF dengan data yang sudah disesuaikan
             $pdf = PDF::loadView('parkir.dashboard-pdf', [
                 'stats' => $stats,
                 'parkirHistory' => $parkirHistory,
-                'periode' => $periode
+                'periode' => $periode,
+                'startDate' => $startDate->format('d/m/Y'),
+                'endDate' => $endDate->format('d/m/Y'),
+                'filterType' => $range
             ]);
 
-            return $pdf->download('laporan-dashboard-' . now()->format('Y-m-d') . '.pdf');
+            // Set paper size dan orientasi (opsional)
+            $pdf->setPaper('a4', 'portrait');
+
+            return $pdf->download('laporan-dashboard-parkir-' . $startDate->format('Ymd') . '-' . $endDate->format('Ymd') . '.pdf');
 
         } catch (\Exception $e) {
             Log::error('Error generating PDF: ' . $e->getMessage());

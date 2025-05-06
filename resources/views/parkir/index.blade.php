@@ -2,6 +2,10 @@
 
 @section('title', 'Data Parkir Masuk')
 
+@push('head')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endpush
+
 @section('content')
 <!-- Simple Navbar -->
 <div class="navbar bg-white py-2 px-4 border-bottom d-flex align-items-center">
@@ -162,7 +166,7 @@
                                        id="search" 
                                        name="search" 
                                        class="form-control" 
-                                       placeholder="Cari nomor kartu atau jenis kendaraan..." 
+                                       placeholder="Cari nomor kartu, plat nomor atau jenis kendaraan..." 
                                        value="{{ request('search') }}"
                                        autocomplete="off">
                                     @if(request('search'))
@@ -261,18 +265,7 @@
             <form action="{{ route('parkir.store') }}" method="POST" id="formParkir">
                 @csrf
                 <div class="modal-body">
-                    <!-- QR Scanner Section -->
-                    <div class="form-group mb-3">
-                        <div id="reader" class="mb-2" style="width: 100%"></div>
-                        <div class="d-flex justify-content-center gap-2 mb-3">
-                            <button type="button" class="btn btn-warning" id="startButton">
-                                <i class="fas fa-camera"></i> Mulai Scanner
-                            </button>
-                            <button type="button" class="btn btn-danger" id="stopButton" style="display: none;">
-                                <i class="fas fa-stop"></i> Stop Scanner
-                            </button>
-                        </div>
-                    </div>
+                    
 
                     <!-- Form Fields -->
                     <div class="form-group mb-3">
@@ -288,6 +281,9 @@
                         @error('nomor_kartu')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
+                        <div class="plate-input-info">
+                            <small></small>Jika tidak ada QR code, silakan isi manual.</small>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -312,7 +308,7 @@
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                         <div class="plate-input-info">
-                            <small>Nilai terdeteksi otomatis. Silakan edit jika diperlukan.</small>
+                            <small>Bisa input manual, atau deteksi otomatis dan bisa edit jika diperlukan.</small>
                         </div>
                     </div>
 
@@ -337,50 +333,106 @@
                         @enderror
                     </div>
 
-                    <div class="text-center mt-3">
-                        <p class="fw-medium text-muted">Atau gunakan fitur otomatis:</p>
-                        <div class="d-flex justify-content-center gap-2">
-                            <!-- Camera Capture UI -->
-                            <div class="camera-container mb-3" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge bg-info" id="camera-info" style="display: none;">Kamera aktif</span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="switchCamera" title="Ganti Kamera">
-                                        <i class="fas fa-sync"></i>
-                                    </button>
-                                </div>
-                                <video id="camera-preview" style="width: 100%; max-height: 300px; object-fit: cover;" autoplay></video>
-                                <canvas id="canvas-preview" style="display: none;"></canvas>
-                                <div class="mt-2 d-flex justify-content-center gap-2">
-                                    <button type="button" class="btn btn-primary btn-sm" id="takePicture">
-                                        <i class="fas fa-camera"></i> Ambil Foto
-                                    </button>
-                                    <button type="button" class="btn btn-danger btn-sm" id="cancelCamera">
-                                        <i class="fas fa-times"></i> Tutup Kamera
-                                    </button>
-                                </div>
-                                <div id="loading-indicator" style="display: none;" class="text-center mt-2">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                    <p class="mt-2">Sedang mengenali plat nomor...</p>
-                                </div>
-                                <div class="captured-image mt-2" style="display: none;">
-                                    <img id="captured-image" style="max-width: 100%; max-height: 200px;" />
-                                </div>
-                                <!-- Panduan visual untuk plat nomor -->
-                                <div class="plate-guide-overlay">
-                                    <div class="plate-frame"></div>
-                                    <div class="plate-instruction">Posisikan plat nomor dalam kotak</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Button to start camera -->
-                            <button type="button" class="btn btn-info" id="startCamera">
-                                <i class="fas fa-camera-retro"></i> Deteksi Plat Nomor
+                    <!-- Tips Pengambilan Gambar -->
+                    {{-- <div class="alert alert-info mt-3 mb-3">
+                        <h5>Tips Pengambilan Gambar Plat Nomor:</h5>
+                        <ul class="mb-0">
+                            <li>Pastikan plat nomor terlihat jelas dan tidak terhalang</li>
+                            <li>Ambil gambar dari jarak 1-2 meter</li>
+                            <li>Hindari pencahayaan yang terlalu terang atau terlalu gelap</li>
+                            <li>Jangan ambil gambar dengan sudut yang terlalu miring</li>
+                            <li>Pastikan plat nomor dalam kondisi bersih dan terbaca</li>
+                        </ul>
+                    </div> --}}
+
+                    <div class="text-center">
+                        <p class="fw-medium text-muted">Gunakan fitur deteksi otomatis:</p>
+
+                        <!-- QR Scanner Section -->
+                    <div class="form-group mb-3">
+                        <div id="reader" class="mb-2" style="width: 100%"></div>
+                        <div class="d-flex justify-content-center gap-2 mb-3">
+                            <button type="button" class="btn btn-warning" id="startButton">
+                                <i class="fas fa-camera"></i> Mulai Scanner
+                            </button>
+                            <button type="button" class="btn btn-danger" id="stopButton" style="display: none;">
+                                <i class="fas fa-stop"></i> Stop Scanner
                             </button>
                         </div>
                     </div>
+                        
+                        <!-- Camera Capture UI -->
+                        <div class="camera-container mb-3" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-info" id="camera-info" style="display: none;">Kamera aktif</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="switchCamera" title="Ganti Kamera">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                            </div>
+                            <video id="camera-preview" style="width: 100%; max-height: 300px; object-fit: cover;" autoplay playsinline></video>
+                            <canvas id="canvas-preview" style="display: none;"></canvas>
+                            
+                            <div class="mt-2 d-flex justify-content-center gap-2">
+                                {{-- <button type="button" class="btn btn-primary btn-sm" id="takePictureStandard">
+                                    <i class="fas fa-camera"></i> Ambil Foto (Server)
+                                </button> --}}
+                                
+                                <button type="button" class="btn btn-success btn-sm" id="takePictureBrowser">
+                                    <i class="fas fa-camera"></i> Deteksi di Browser
+                                </button>
+                                
+                                <button type="button" class="btn btn-danger btn-sm" id="cancelCamera">
+                                    <i class="fas fa-times"></i> Tutup Kamera
+                                </button>
+                            </div>
+                            
+                            <div id="loading-indicator" style="display: none;" class="text-center mt-2">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Sedang mengenali plat nomor...</p>
+                            </div>
+                            
+                            <div id="browser-processing-message" class="d-none text-center">
+                                <small><i class="fas fa-spinner fa-spin"></i> Memproses gambar di browser...</small>
+                            </div>
+                            
+                            <div class="captured-image mt-2" style="display: none;">
+                                <div class="plate-instruction">Posisikan plat nomor dalam kotak</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tambahkan di bawah elemen camera container di modal -->
+                        <div class="auto-detection-info mt-2">
+                         <p><strong>Tips untuk hasil deteksi terbaik:</strong></p>
+                         <ul class="text-start small">
+                        <li>Pastikan plat nomor terlihat jelas dan tidak tertutup</li>
+                        <li>Hindari bayangan dan pencahayaan yang terlalu terang</li>
+                        <li>Posisikan kamera sejajar dengan plat nomor</li>
+                        <li>Jarak ideal antara kamera dan plat adalah 30-50 cm</li>
+                         </ul>
+                    </div>
+                        
+                        <!-- Button to start camera -->
+                        <button type="button" class="btn btn-info" id="startCamera">
+                            <i class="fas fa-camera-retro"></i> Deteksi Plat Nomor
+                        </button>
+                    </div>
+                    
+                    <!-- Progress indicator untuk OpenCV -->
+                    <div id="opencv-processing-message" class="alert alert-info mt-3 d-none">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border text-info me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div>
+                                <strong>Memproses gambar dengan OpenCV + Tesseract...</strong><br>
+                                <small>Proses ini mungkin memerlukan waktu beberapa detik.</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                
                 <div class="modal-footer d-flex justify-content-end">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
                     <button type="submit" class="btn btn-warning ms-2">Simpan</button>
@@ -396,9 +448,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editParkirModalLabel">Edit Data Parkir</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="" method="POST" id="editParkirForm">
                 @csrf
@@ -419,10 +469,54 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                     <button type="submit" class="btn btn-warning">Perbarui</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Kamera -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cameraModalLabel">Deteksi Plat Nomor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Tambahkan ini jika belum ada -->
+                <div class="camera-container">
+                    <video id="camera-preview" autoplay playsinline></video>
+                    <canvas id="canvas-preview" style="display: none;"></canvas>
+                    <div class="captured-image" style="display: none; text-align: center;">
+                        <img id="captured-image" class="img-fluid" alt="Captured Image">
+                    </div>
+                </div>
+                
+                <div id="loading-indicator" style="display: none; text-align: center; margin-top: 10px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p id="opencv-processing-message" class="mt-2 d-none">Sedang memproses di server...</p>
+                    <p id="browser-processing-message" class="mt-2 d-none">Sedang memproses di browser...</p>
+                </div>
+                
+                <div class="mt-3 d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="takePictureStandard">
+                        <i class="fas fa-camera"></i> Ambil Foto (Server)
+                    </button>
+                    
+                    <button type="button" class="btn btn-success btn-sm" id="takePictureBrowser">
+                        <i class="fas fa-camera"></i> Deteksi Plat Otomatis
+                    </button>
+                    
+                    <button type="button" class="btn btn-danger btn-sm" id="cancelCamera">
+                        <i class="fas fa-times"></i> Tutup Kamera
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -445,6 +539,16 @@
 <!-- OCR Dependencies -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.3/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.0/dist/browser-image-compression.js"></script>
+
+<!-- Tambahkan script plate-detection.js -->
+<script src="{{ asset('js/plate-detection.js') }}"></script>
+
+<!-- TensorFlow.js -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+
+<!-- Tesseract.js -->
+<script src="https://unpkg.com/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
 
 <script>
     $(document).ready(function () {
@@ -503,6 +607,12 @@
             
             // Tampilkan modal
             $('#editParkirModal').modal('show');
+        });
+
+        // Tambahkan handler untuk tombol YOLO
+        $('#takePictureYolo').click(function() {
+            console.log('YOLO button clicked');
+            takePictureWithYolo();
         });
     });
 </script>
@@ -674,6 +784,9 @@ $(document).ready(function() {
                         });
                         stopScanner();
                     }
+                });
+            });
+        }
     });
 
     // Stop Scanner
@@ -689,6 +802,7 @@ $(document).ready(function() {
     // Validasi input manual
     $('#nomor_kartu').on('input', function() {
         let value = this.value;
+        // Validasi saat input manual
         if (value.length > 0) {
             $.ajax({
                 url: '{{ route("parkir.check-card") }}',
@@ -873,7 +987,7 @@ $(document).ready(function() {
                     </div>
                 `,
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#ffc107',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Gunakan Kamera',
                 cancelButtonText: 'Batal'
@@ -1102,21 +1216,9 @@ $(document).ready(function() {
         $('#loading-indicator').show();
         
         // Set canvas dimensions
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
         
-        // Draw video to canvas
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Display captured image
-        capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
-        $('.captured-image').show();
-        
-        // Get image data for API
-        const imageData = canvas.toDataURL('image/jpeg', 0.9);
-        
-        // Console log image data length for debugging
         console.log("Image data length:", imageData.length);
         if (imageData.length < 1000) {
             console.error("Image data too small, might not be valid");
@@ -1131,16 +1233,10 @@ $(document).ready(function() {
             return;
         }
         
-        // Process with Tesseract or API
         processWithOCR(imageData)
             .then(result => {
-                // Isi form dengan hasil OCR
                 fillPlateInputs(result);
-                
-                // Highlight input fields untuk menunjukkan pengguna bisa mengedit
                 highlightInputsForEditing();
-                
-                // Fokus ke input region untuk memudahkan pengeditan
                 $('.plate-region').focus();
             });
     }
@@ -1157,51 +1253,41 @@ $(document).ready(function() {
 });
 
 function improveOCRResult(text) {
-    // Convert to uppercase and trim spaces
     let plate = text.toUpperCase().trim();
-    
-    // Bersihkan spasi berlebih (contoh: "B  2374  KH" → "B 2374 KH")
     plate = plate.replace(/\s+/g, ' ');
     
-    // Koreksi kesalahan umum OCR
     const commonCorrections = {
-        '0': 'O',  // angka 0 sering terdeteksi sebagai huruf O  
-        'Q': 'O',  // Q sering terdeteksi sebagai O
-        'I': '1',  // I sering terdeteksi sebagai 1 pada bagian angka
-        'S': '5',  // huruf S kadang terdeteksi sebagai angka 5
-        'Z': '2',  // Z kadang terdeteksi sebagai 2
-        'G': '6',  // G kadang terdeteksi sebagai 6
-        'D': '0',  // D kadang terdeteksi sebagai 0
-        'U': 'V',  // U kadang terdeteksi sebagai V
+        '0': 'O',
+        'Q': 'O',
+        'I': '1',
+        'S': '5',
+        'Z': '2',
+        'G': '6',
+        'D': '0',
+        'U': 'V',
     };
     
-    // Deteksi jika ini adalah pola plat nomor (huruf-angka-huruf)
     const platePattern = /([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})/;
     const match = plate.match(platePattern);
     
     if (match) {
-        // Jika sesuai pola plat, koreksi setiap bagian dengan tepat
-        let region = match[1];     // Huruf daerah (contoh: B, D, AB)
-        let numbers = match[2];    // Bagian angka (contoh: 1234)
-        let letters = match[3];    // Bagian huruf (contoh: ABC)
+        let region = match[1];
+        let numbers = match[2];
+        let letters = match[3];
         
-        // Pada bagian angka, ganti huruf yang mungkin salah baca
         numbers = numbers.replace(/O/g, '0');
         numbers = numbers.replace(/I/g, '1');
         numbers = numbers.replace(/S/g, '5');
         numbers = numbers.replace(/Z/g, '2');
         
-        // Pada bagian huruf, ganti angka yang mungkin salah baca
         letters = letters.replace(/0/g, 'O');
         letters = letters.replace(/1/g, 'I');
         letters = letters.replace(/5/g, 'S');
         letters = letters.replace(/2/g, 'Z');
         
-        // Buat hasil yang terkoreksi dengan format standar
         return `${region} ${numbers} ${letters}`;
     }
     
-    // Jika tidak sesuai pola, kembalikan teks asli yang sudah dibersihkan
     return plate;
 }
 </script>
@@ -1209,17 +1295,14 @@ function improveOCRResult(text) {
 <script>
 // Script untuk highlight dan saran
 $(document).ready(function() {
-    // Saat input berubah, periksa format
     $('#plat_nomor').on('input', function() {
         let value = $(this).val().toUpperCase();
         $(this).val(value);
         
-        // Periksa pola standar plat nomor Indonesia
         const platePattern = /^([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})$/;
         if (!platePattern.test(value)) {
             $(this).addClass('is-invalid');
             
-            // Coba sarankan format yang benar
             const match = value.match(/([A-Z]{1,2})[^A-Z0-9]*([0-9]{1,4})[^A-Z0-9]*([A-Z]{1,3})/i);
             if (match) {
                 const suggestion = `${match[1]} ${match[2]} ${match[3]}`.toUpperCase();
@@ -1240,7 +1323,6 @@ $(document).ready(function() {
         }
     });
     
-    // Tombol edit: fokuskan input dan seleksi isinya
     $('.plate-edit-btn').click(function() {
         $('#plat_nomor').focus().select();
     });
@@ -1249,14 +1331,12 @@ $(document).ready(function() {
 
 <script>
 async function recognizeWithMultipleMethods(imageData) {
-    // Metode 1: Tesseract with default settings
     const result1 = await Tesseract.recognize(
         imageData,
         'eng',
         { tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' }
     );
     
-    // Metode 2: Tesseract with contrast enhancement
     const enhancedCanvas = enhancePlateImage(canvas.cloneNode(true));
     const result2 = await Tesseract.recognize(
         enhancedCanvas.toDataURL('image/jpeg'),
@@ -1264,7 +1344,6 @@ async function recognizeWithMultipleMethods(imageData) {
         { tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' }
     );
     
-    // Metode 3: Server-side OCR using EasyOCR
     const apiResult = await $.ajax({
         url: '/api/detect-plate',
         method: 'POST',
@@ -1279,8 +1358,6 @@ async function recognizeWithMultipleMethods(imageData) {
     console.log('Tesseract enhanced:', result2.data.text);
     console.log('EasyOCR:', apiResult.raw_text);
     
-    // Voting mechanism - parsePlateNumber tries each result
-    // and returns the most likely valid plate number
     return findBestPlateNumber([
         result1.data.text,
         result2.data.text,
@@ -1289,50 +1366,37 @@ async function recognizeWithMultipleMethods(imageData) {
 }
 
 function findBestPlateNumber(results) {
-    // Filter valid-looking plates
     const platPattern = /([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})/;
     
-    // Find valid matches
     const validResults = results
         .map(text => text.trim().toUpperCase())
         .filter(text => platPattern.test(text));
     
-    // Return first valid match or the first result
     return validResults.length > 0 ? validResults[0] : results[0].trim().toUpperCase();
 }
 </script>
 
 <script>
-// Tambahkan setelah fungsi enhancePlateImage
-// dan sebelum console.log('OCR system with camera selection initialized')
-
-// Fungsi untuk memproses gambar dengan OCR
-// Perbaiki fungsi processWithOCR
 async function processWithOCR(imageData) {
     return new Promise((resolve, reject) => {
-        // Gunakan canvas untuk preprocessing
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
         const img = new Image();
         img.onload = function() {
-            // Atur ukuran canvas
             tempCanvas.width = img.width;
             tempCanvas.height = img.height;
             
-            // Gambar ke canvas
             tempCtx.drawImage(img, 0, 0);
             
-            // Terapkan peningkatan gambar
             const enhancedCanvas = window.enhancePlateImage(tempCanvas);
             
-            // Process with Tesseract
             Tesseract.recognize(
                 enhancedCanvas.toDataURL('image/jpeg'),
                 'eng',
                 { 
                     logger: m => console.log('OCR progress:', m.status || m),
                     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
-                    tessedit_pageseg_mode: '7',  // Treat image as single text line
+                    tessedit_pageseg_mode: '7',
                     preserve_interword_spaces: '0',
                     tessjs_create_hocr: '0',
                     tessjs_create_tsv: '0'
@@ -1341,15 +1405,13 @@ async function processWithOCR(imageData) {
             .then(result => {
                 const rawText = result.data.text.trim().toUpperCase();
                 console.log('OCR raw result:', rawText);
-                window.ocrInProgress = false; // Use window to ensure global scope
+                window.ocrInProgress = false;
                 $('#loading-indicator').hide();
                 
-                // Langsung isi field tunggal (bukan segmented)
                 $('#plat_nomor').val(rawText);
                 $('#loading-indicator').hide();
                 ocrInProgress = false;
                 
-                // Highlight efek pada field
                 $('#plat_nomor').addClass('highlight-for-edit');
                 setTimeout(() => {
                     $('#plat_nomor').removeClass('highlight-for-edit');
@@ -1398,17 +1460,14 @@ async function processWithOCR(imageData) {
 
 <script>
 $(document).ready(function() {
-    // Update hidden input saat nilai berubah
     $('.plate-region, .plate-number, .plate-suffix').on('input', function() {
         updatePlatNomorInput();
     });
     
-    // Format nilai saat diketik
     $('.plate-region, .plate-suffix').on('input', function() {
         $(this).val($(this).val().toUpperCase());
     });
     
-    // Auto focus ke input berikutnya
     $('.plate-region').on('keyup', function() {
         if ($(this).val().length >= parseInt($(this).attr('maxlength'))) {
             $('.plate-number').focus();
@@ -1423,6 +1482,184 @@ $(document).ready(function() {
 });
 </script>
 
+<script>
+function takePictureWithYolo() {
+    if (ocrInProgress) return;
+    
+    console.log('OpenCV detection triggered at:', new Date().toLocaleTimeString());
+    const video = document.getElementById('camera-preview');
+    const canvas = document.getElementById('canvas-preview');
+    const capturedImage = document.getElementById('captured-image');
+    
+    if (!video || !canvas || !capturedImage) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    if (!videoStream) {
+        console.error('No active camera stream');
+        Swal.fire({
+            icon: 'error',
+            title: 'Kamera Tidak Aktif',
+            text: 'Silakan aktifkan kamera terlebih dahulu',
+            confirmButtonColor: '#dc3545'
+        });
+        return;
+    }
+    
+    ocrInProgress = true;
+    $('#loading-indicator').show();
+    $('#opencv-processing-message').removeClass('d-none');
+    
+    try {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        
+        console.log('Canvas dimensions:', canvas.width, canvas.height);
+        
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
+        $('.captured-image').show();
+        
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        
+        console.log('AJAX call to detect-plate with image length:', imageData.length);
+        
+        $.ajax({
+            url: '/detect-plate',
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                image: imageData
+            },
+            success: function(response) {
+                console.log('OpenCV response received:', response);
+                $('#loading-indicator').hide();
+                $('#opencv-processing-message').addClass('d-none');
+                ocrInProgress = false;
+                
+                if (response.success) {
+                    $('#plat_nomor').val(response.plate_number);
+                    $('#plat_nomor').addClass('highlight-for-edit');
+                    setTimeout(() => {
+                        $('#plat_nomor').removeClass('highlight-for-edit');
+                    }, 2000);
+                    
+                    let html = `
+                        <p>Plat nomor terdeteksi:</p>
+                        <h4 class="mb-0">${response.plate_number}</h4>
+                        <p class="text-muted mt-1">Confidence: ${Math.round(response.confidence * 100)}%</p>
+                        <p class="text-info small">Method: ${response.method || 'OpenCV+Tesseract'}</p>
+                    `;
+                    
+                    if (response.debug_image_url) {
+                        html += `
+                            <div class="mt-2">
+                                <img src="${response.debug_image_url}" class="img-fluid" style="max-height: 150px">
+                            </div>
+                        `;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deteksi Berhasil',
+                        html: html,
+                        confirmButtonColor: '#28a745'
+                    });
+                    
+                    stopCamera();
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Deteksi Gagal',
+                        text: response.message || 'Tidak dapat mendeteksi plat nomor. Coba lagi dengan gambar yang lebih jelas.',
+                        confirmButtonColor: '#ffc107',
+                        showCancelButton: true,
+                        confirmButtonText: 'Coba Lagi',
+                        cancelButtonText: 'Tutup'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#opencv-processing-message').addClass('d-none');
+                        }
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('OpenCV API error:', error);
+                console.error('Response:', xhr.responseText);
+                $('#loading-indicator').hide();
+                $('#opencv-processing-message').addClass('d-none');
+                ocrInProgress = false;
+                
+                const debugImg = document.createElement('img');
+                debugImg.src = imageData;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error Koneksi',
+                    text: 'Terjadi masalah koneksi ke server. Pastikan server berjalan dan browser terhubung ke jaringan.',
+                    footer: '<a href="#" id="tryLocalStorage">Coba gunakan penyimpanan lokal</a>',
+                    confirmButtonColor: '#dc3545'
+                });
+                
+                document.getElementById('tryLocalStorage').addEventListener('click', function() {
+                    localStorage.setItem('capturedPlateImage', imageData);
+                    
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Gambar Disimpan',
+                        text: 'Gambar disimpan di penyimpanan lokal. Anda dapat memasukkan plat nomor secara manual.',
+                        confirmButtonColor: '#ffc107'
+                    });
+                });
+            }
+        });
+    } catch (e) {
+        console.error('Error in takePictureWithYolo:', e);
+        $('#loading-indicator').hide();
+        $('#opencv-processing-message').addClass('d-none');
+        ocrInProgress = false;
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Terjadi kesalahan: ' + e.message,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+$(document).ready(function() {
+    $('#takePictureYolo').off('click');
+    
+    $('#takePictureYolo').on('click', function() {
+        console.log('OpenCV detection button clicked');
+        takePictureWithYolo();
+    });
+    
+    console.log('takePictureYolo button found:', $('#takePictureYolo').length > 0);
+});
+</script>
+
+<script>
+$(document).ready(function() {
+    console.log('Document ready - setting up YOLO detection');
+    
+    $(document).on('ajaxError', function(event, xhr, settings) {
+        if (settings.url && settings.url.includes('yolo-detect-plate')) {
+            console.error('AJAX Error for YOLO detection:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                responseText: xhr.responseText
+            });
+        }
+    });
+    
+    console.log('CSRF token present:', $('meta[name="csrf-token"]').length > 0);
+});
+</script>
 @endsection
 
 @push('styles')
@@ -1475,7 +1712,6 @@ $(document).ready(function() {
         border-radius: 0.375rem !important;
     }
 
-    /* Sidebar toggle button styles */
     [data-lte-toggle="sidebar"] {
         cursor: pointer;
         color: #6c757d;
@@ -1515,7 +1751,6 @@ $(document).ready(function() {
 </style>
 
 <style>
-    /* Styling untuk kamera OCR */
     .camera-container {
         background-color: #f8f9fa;
         border-radius: 8px;
@@ -1583,7 +1818,6 @@ $(document).ready(function() {
 </style>
 
 <style>
-/* Styling untuk dropdown jenis kendaraan */
 #jenis_kendaraan {
     height: calc(1.5em + 0.75rem + 2px);
     border-top-left-radius: 0;
@@ -1595,8 +1829,79 @@ $(document).ready(function() {
     text-align: center;
 }
 
-/* Styling untuk highlight pada select */
 select.highlight-for-edit {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    transition: background-color 0.5s ease;
+}
+</style>
+
+<style>
+.camera-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+#camera-preview {
+    border-radius: 8px;
+    background-color: #000;
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+}
+
+.captured-image img {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid #fff;
+}
+
+#loading-indicator {
+    background-color: rgba(255,255,255,0.8);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.plate-guide-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.plate-frame {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 30%;
+    border: 3px dashed rgba(255, 255, 0, 0.8);
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.plate-instruction {
+    position: absolute;
+    top: 15%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    background: rgba(0,0,0,0.5);
+    padding: 5px;
+    font-weight: bold;
+    border-radius: 5px;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.highlight-for-edit {
     background-color: rgba(255, 193, 7, 0.2) !important;
     transition: background-color 0.5s ease;
 }
@@ -1606,13 +1911,11 @@ select.highlight-for-edit {
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Sidebar toggle
         $('[data-lte-toggle="sidebar"]').on('click', function(e) {
             e.preventDefault();
             $('body').toggleClass('sidebar-collapse');
         });
 
-        // Enhanced search functionality
         $('#search').on('input', function() {
             let searchText = $(this).val().toLowerCase();
             let noResults = true;
@@ -1627,7 +1930,6 @@ select.highlight-for-edit {
                 }
             });
 
-            // Show no results message
             if (noResults) {
                 if ($('#noResults').length === 0) {
                     $('#dataTable tbody').append(`
@@ -1646,12 +1948,10 @@ select.highlight-for-edit {
             }
         });
 
-        // Auto-hide alerts
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 3000);
 
-        // Initialize tooltips
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
     });
@@ -1685,29 +1985,25 @@ select.highlight-for-edit {
             });
         });
     });
-</script>
+</>
 
 <script>
 $(document).ready(function() {
-    // Variabel untuk menyimpan timeout
     let searchTimeout;
 
-    // Handle input pencarian dengan debounce
     $('#search').on('input', function() {
         clearTimeout(searchTimeout);
         
         searchTimeout = setTimeout(() => {
             $('#searchForm').submit();
-        }, 500); // Tunggu 500ms setelah user selesai mengetik
+        }, 500);
     });
 
-    // Handle clear search
     $('#clearSearch').on('click', function() {
         $('#search').val('');
         window.location.href = "{{ route('parkir.index') }}";
     });
 
-    // Highlight hasil pencarian
     function highlightSearch() {
         let searchText = "{{ request('search') }}";
         if (searchText) {
@@ -1723,7 +2019,6 @@ $(document).ready(function() {
         }
     }
 
-    // Panggil fungsi highlight saat halaman dimuat
     highlightSearch();
 });
 </script>
@@ -1741,7 +2036,6 @@ function stopScanner() {
 }
 
 $(document).ready(function() {
-    // Start Scanner
      $('#startButton').click(function() {
         if (html5QrcodeScanner === null) {
             $('#stopButton').show();
@@ -1757,7 +2051,6 @@ $(document).ready(function() {
             );
             
             html5QrcodeScanner.render((decodedText) => {
-                // Cek status kartu melalui AJAX
                 $.ajax({
                     url: '/parkir/check-card',
                     type: 'POST',
@@ -1767,7 +2060,6 @@ $(document).ready(function() {
                     },
                     success: function(response) {
                         if (response.is_used) {
-                            // Kartu sedang digunakan
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Kartu Sedang Digunakan',
@@ -1775,7 +2067,6 @@ $(document).ready(function() {
                                 confirmButtonColor: '#dc3545'
                             });
                         } else {
-                            // Kartu valid dan bisa digunakan
                             $('#nomor_kartu').val(decodedText);
                             stopScanner();
                             Swal.fire({
@@ -1800,20 +2091,16 @@ $(document).ready(function() {
         }
     });
 
-    // Stop Scanner
     $('#stopButton').click(function() {
         stopScanner();
     });
 
-    // Reset scanner saat modal ditutup
     $('#parkirModal').on('hidden.bs.modal', function() {
         stopScanner();
     });
 
-    // Validasi input manual
     $('#nomor_kartu').on('input', function() {
         let value = this.value;
-        // Validasi saat input manual
         if (value.length > 0) {
             $.ajax({
                 url: '/parkir/check-card',
@@ -1838,19 +2125,13 @@ $(document).ready(function() {
 });
 </script>
 
-<!-- Tambahkan script ini -->
 <script>
-// OCR System Implementation - Perbaikan Error NotReadableError
 $(document).ready(function() {
     console.log('Initializing OCR system with fallback options...');
     
-    // Global variables
-    // let videoStream = null;
-    // let ocrInProgress = false;
-    window.videoStream = null; // Use window to ensure global scope
-    window.ocrInProgress = false; // Use window to ensure global scope
+    window.videoStream = null;
+    window.ocrInProgress = false;
     
-    // Event handlers
     $(document).on('click', '#startCamera', function() {
         console.log('Start camera button clicked');
         startCameraWithFallback();
@@ -1866,13 +2147,11 @@ $(document).ready(function() {
         takePicture();
     });
     
-    // Reset on modal close
     $('#parkirModal').on('hidden.bs.modal', function() {
         console.log('Modal closed, stopping camera');
         stopCamera();
     });
     
-    // Improved camera initialization with fallback options
     function startCameraWithFallback() {
         console.log('Starting camera with fallback strategy...');
         const video = document.getElementById('camera-preview');
@@ -1892,12 +2171,10 @@ $(document).ready(function() {
             return;
         }
         
-        // Ensure any existing stream is stopped
         if (videoStream) {
             stopCamera();
         }
         
-        // First attempt - Try with ideal settings
         tryGetUserMedia({
             video: {
                 facingMode: 'environment',
@@ -1910,7 +2187,6 @@ $(document).ready(function() {
         .catch(err => {
             console.log('First camera attempt failed:', err);
             
-            // Second attempt - Try with basic settings
             return tryGetUserMedia({
                 video: true,
                 audio: false
@@ -1920,7 +2196,6 @@ $(document).ready(function() {
         .catch(err => {
             console.log('Second camera attempt failed:', err);
             
-            // Third attempt - Try with minimal settings
             return tryGetUserMedia({
                 video: {
                     width: { ideal: 640 },
@@ -1931,10 +2206,8 @@ $(document).ready(function() {
         })
         .then(setupStream)
         .catch(err => {
-            // All attempts failed
             console.error('All camera access attempts failed:', err);
             
-            // Handle specific error types
             if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
                 Swal.fire({
                     icon: 'error',
@@ -1967,12 +2240,10 @@ $(document).ready(function() {
             }
         });
         
-        // Helper for getUserMedia
         function tryGetUserMedia(constraints) {
             return navigator.mediaDevices.getUserMedia(constraints);
         }
         
-        // Setup video stream
         function setupStream(stream) {
             if (!stream) return Promise.reject('No stream available');
             
@@ -2003,16 +2274,14 @@ $(document).ready(function() {
         }
     }
     
-    // Function to stop camera - improved
     function stopCamera() {
         console.log('Stopping camera...');
         if (videoStream) {
             videoStream.getTracks().forEach(function(track) {
                 track.stop();
             });
-            videoStream = null;
+            window.videoStream = null;
             
-            // Clear video source
             const video = document.getElementById('camera-preview');
             if (video) {
                 video.srcObject = null;
@@ -2021,9 +2290,9 @@ $(document).ready(function() {
         $('.camera-container').hide();
         $('#startCamera').show();
         $('.captured-image').hide();
+        $('#camera-info').hide();
     }
     
-    // Take picture and process
     function takePicture() {
         if (ocrInProgress) return;
         
@@ -2040,29 +2309,24 @@ $(document).ready(function() {
         ocrInProgress = true;
         $('#loading-indicator').show();
         
-        // Set canvas dimensions
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Draw video to canvas
         const context = canvas.getContext('2d');
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Display captured image
         capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
         $('.captured-image').show();
         
-        // Preprocess the image for better OCR results
         const processedCanvas = enhancePlateImage(canvas);
         
-        // Process with Tesseract
         Tesseract.recognize(
             processedCanvas.toDataURL('image/jpeg'),
             'eng',
             { 
                 logger: m => console.log('OCR progress:', m.status || m),
                 tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
-                tessedit_pageseg_mode: '7',  // Treat image as single text line
+                tessedit_pageseg_mode: '7',
                 preserve_interword_spaces: '0',
                 tessjs_create_hocr: '0',
                 tessjs_create_tsv: '0'
@@ -2072,16 +2336,13 @@ $(document).ready(function() {
             const rawText = result.data.text.trim();
             console.log('OCR raw result:', rawText);
             
-            // Terapkan koreksi ringan
             const improvedText = improveOCRResult(rawText);
             console.log('Improved OCR result:', improvedText);
             
-            // Langsung isi field tunggal (bukan segmented)
             $('#plat_nomor').val(improvedText);
             $('#loading-indicator').hide();
             ocrInProgress = false;
             
-            // Highlight efek pada field
             $('#plat_nomor').addClass('highlight-for-edit');
             setTimeout(() => {
                 $('#plat_nomor').removeClass('highlight-for-edit');
@@ -2111,31 +2372,26 @@ $(document).ready(function() {
         });
     }
     
-    // Enhance image for better OCR results
     window.enhancePlateImage = function(canvas) {
         const ctx = canvas.getContext('2d');
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
         
-        // Tingkatkan kontras
-        const contrast = 1.5; // Nilai tinggi = kontras lebih tinggi
+        const contrast = 1.5;
         const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
         
         for (let i = 0; i < data.length; i += 4) {
-            // Konversi ke grayscale
             const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
             
-            // Tingkatkan kontras
-            data[i] = factor * (gray - 128) + 128;     // R
-            data[i + 1] = factor * (gray - 128) + 128; // G
-            data[i + 2] = factor * (gray - 128) + 128; // B
+            data[i] = factor * (gray - 128) + 128;
+            data[i + 1] = factor * (gray - 128) + 128;
+            data[i + 2] = factor * (gray - 128) + 128;
             
-            // Binarization (threshold)
             const threshold = 150;
             if (data[i] > threshold) {
-                data[i] = data[i+1] = data[i+2] = 255; // Putih
+                data[i] = data[i+1] = data[i+2] = 255;
             } else {
-                data[i] = data[i+1] = data[i+2] = 0;   // Hitam
+                data[i] = data[i+1] = data[i+2] = 0;
             }
         }
         
@@ -2150,14 +2406,12 @@ $(document).ready(function() {
 
 @push('styles')
 <style>
-    /* Highlight style untuk hasil pencarian */
     .highlight {
         background-color: #fff3cd;
         padding: 2px;
         border-radius: 3px;
     }
 
-    /* Loading indicator style */
     .search-loading {
         position: absolute;
         right: 10px;
@@ -2166,7 +2420,6 @@ $(document).ready(function() {
         display: none;
     }
 
-    /* Clear button style */
     #clearSearch {
         border: none;
         background: transparent;
@@ -2177,7 +2430,6 @@ $(document).ready(function() {
         color: #dc3545;
     }
 
-    /* Improve input group appearance */
     .input-group {
         border-radius: 0.375rem;
         overflow: hidden;
@@ -2204,4 +2456,33 @@ $(document).ready(function() {
     transition: background-color 0.5s ease;
 }
 </style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/plate-detection-browser.js') }}"></script>
+<script src="{{ asset('js/simple-detection.js') }}"></script>
+
+<script>
+$(document).ready(function() {
+    $('#cameraModal').on('shown.bs.modal', function () {
+        console.log('Camera modal shown, checking elements:');
+        console.log('- video:', !!document.getElementById('camera-preview'));
+        console.log('- canvas:', !!document.getElementById('canvas-preview'));
+        console.log('- captured-image:', !!document.getElementById('captured-image'));
+    });
+    
+    $(document).on('click', '#takePictureBrowser', function() {
+        console.log('Browser detection button clicked (from index)');
+        
+        if (typeof detectPlateInBrowser === 'function') {
+            detectPlateInBrowser();
+        } else if (typeof detectPlateSimple === 'function') {
+            detectPlateSimple();
+        } else {
+            console.error('No detection function found!');
+            alert('Fungsi deteksi tidak ditemukan.');
+        }
+    });
+});
+</script>
 @endpush

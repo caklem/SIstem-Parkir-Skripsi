@@ -11,10 +11,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.1.0/styles/overlayscrollbars.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="{{asset('css/plate-detection.css')}}">
+    <link rel="stylesheet" href="{{ asset('css/plate-validator.css') }}">
+   
+     <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('img/logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('img/logo.png') }}">
 
     <!-- QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Library untuk deteksi plat nomor di browser -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+    <script src="{{ asset('js/indonesia-plate-detection.js') }}"></script>
 
     @stack('styles')
 
@@ -243,6 +256,12 @@
             transition: color .3s ease;
         }
     </style>
+
+    @push('head')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.3/dist/tesseract.min.js"></script>
+    <script src="{{ asset('js/plate-detection.js') }}"></script>
+    @endpush
 </head>
 <body class="sidebar-mini layout-fixed">
 
@@ -253,8 +272,9 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-warning elevation-4">
             <!-- Brand Logo -->
-            <a href="/" class="brand-link">
-                <img src="{{ asset('img/logo.png') }}" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+            <a href="/" class="brand-link text-center">
+                <img src="{{ asset('img/logo.png') }}" alt="Logo" class="brand-image img-circle elevation-2" 
+                     style="opacity: 0.8; max-height: 40px; margin-left: 0.2rem; margin-right: 0.5rem;">
                 <span class="brand-text font-weight-light">GOLDEN HILL</span>
             </a>
 
@@ -301,23 +321,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-header">PENGATURAN</li>
-                        
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon bi bi-person-circle"></i>
-                                <p>
-                                    Akun
-                                    <i class="bi bi-chevron-right ms-auto"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="./profile" class="nav-link">
-                                        <i class="nav-icon bi bi-person"></i>
-                                        <p>Profil</p>
-                                    </a>
-                                </li>
                                 <li class="nav-item">
                                     <form action="{{ route('logout') }}" method="POST" id="logout-form">
                                     @csrf
@@ -327,8 +331,8 @@
                                     </a>
                                 </form>
                             </li>
-                            </ul>
-                        </li>
+                            
+                        
                     </ul>
                 </nav>
             </div>
@@ -357,6 +361,13 @@
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="{{ asset('js/create-camera-elements.js') }}"></script>
+    <!-- Tambahkan di bagian bawah sebelum </body> -->
+    <script src="{{ asset('js/camera-focus-helper.js') }}"></script>
+    <script src="{{ asset('js/preload-tesseract.js') }}"></script>
+    <script src="{{ asset('js/indonesia-plate-detection.js') }}"></script>
+    <script src="{{ asset('js/plate-input-validator.js') }}"></script>
+    
 
     <!-- Replace the existing QR scanner script with this one -->
     <script>

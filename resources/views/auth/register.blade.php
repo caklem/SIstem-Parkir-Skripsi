@@ -3,7 +3,7 @@
 @section('content')
 <div class="register-box">
     <div class="register-logo">
-        <a href="{{ url('/') }}"><b>Sistem</b>Parkir</a>
+        <a href="{{ url('/') }}"><b>Sipark</b>Golden Hill</a>
     </div>
     <div class="card">
         <div class="card-body register-card-body">
@@ -64,15 +64,63 @@
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-block">Daftar</button>
+                        <button type="submit" class="btn btn-warning btn-block">Daftar</button>
                     </div>
                 </div>
             </form>
 
             <p class="mb-0 mt-3 text-center">
-                <a href="{{ route('login') }}" class="text-center"><b>Login</b>, Jika Sudah Punya Akun</a>
+                <a href="{{ route('login') }}" class="text-center text-warning"><b>Login</b>, Jika Sudah Punya Akun</a>
             </p>
         </div>
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .btn-warning {
+        color: #fff;
+        background-color: #ffc107;
+        border-color: #ffc107;
+        box-shadow: none;
+        font-weight: 600;
+    }
+    
+    .btn-warning:hover {
+        color: #fff;
+        background-color: #e0a800;
+        border-color: #d39e00;
+    }
+    
+    .text-warning {
+        color: #ffc107 !important;
+    }
+    
+    .text-warning:hover {
+        color: #e0a800 !important;
+        text-decoration: underline;
+    }
+    
+    .register-box {
+        width: 360px;
+        margin: 0 auto;
+    }
+    
+    @media (max-width: 576px) {
+        .register-box {
+            width: 90%;
+        }
+    }
+    
+    .register-card-body {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 0.25rem;
+    }
+    
+    .register-logo a {
+        color: #495057;
+    }
+</style>
+@endpush

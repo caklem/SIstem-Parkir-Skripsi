@@ -23,3 +23,9 @@ yarn-error.log
 /.zed
 /venv_tensorflow
 /venv_yolo
+/torch_cache
+/python-venv
+/pythonvenv
+/pythonvenv_ocr
+/python
+/torch_cache

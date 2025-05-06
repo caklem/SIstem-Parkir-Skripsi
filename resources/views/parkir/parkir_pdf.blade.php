@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Parkir Masuk</title>
+    <title>Laporan Parkir Masuk Hotel Golden Hill</title>
     <style>
         @page {
             margin: 0.5cm 1cm;
@@ -44,7 +44,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="title">Laporan Parkir Masuk</div>
+        <div class="title">Laporan Parkir Masuk Hotel Golden Hill</div>
         <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->format('F Y') }}</div>
     </div>
     <table class="table">
