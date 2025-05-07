@@ -772,6 +772,88 @@
     .card-header {
         padding: 0.75rem 1rem;
     }
+
+    /* Style untuk form verifikasi pada SweetAlert */
+    .swal2-html-container .text-start {
+        text-align: left !important;
+    }
+
+    .swal2-html-container .mb-1 {
+        margin-bottom: 0.25rem !important;
+    }
+
+    .swal2-html-container strong {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .swal2-html-container .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+    }
+
+    .swal2-html-container .alert-warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+    }
+
+    .swal2-html-container .form-check {
+        padding-left: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .swal2-html-container .form-check-input {
+        position: absolute;
+        margin-top: 0.25rem;
+        margin-left: -1.5rem;
+    }
+
+    .swal2-html-container .me-2 {
+        margin-right: 0.5rem !important;
+    }
+
+    /* Style khusus untuk checkbox verifikasi */
+    #verifikasiPetugas {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+
+    #verifikasiPetugas:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    /* Efek highlight untuk detail kendaraan saat dipilih */
+    @keyframes highlightEffect {
+        0% { background-color: #fff; }
+        30% { background-color: #fff9e6; }
+        100% { background-color: #fff; }
+    }
+
+    .highlight-effect {
+        animation: highlightEffect 0.8s ease;
+    }
+
+    /* Style tambahan untuk panel preview kendaraan */
+    #hasilPencarian .card {
+        transition: all 0.3s ease;
+    }
+
+    #hasilPencarian .card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #hasilPencarian .card-header {
+        transition: background-color 0.3s ease;
+    }
+
+    #hasilPencarian .card-header:hover {
+        background-color: #e5ad07;
+    }
 </style>
 @endsection
 
@@ -885,12 +967,17 @@ $('#btnCloseDetail').on('click', function() {
         
         console.log('Memproses kendaraan keluar dengan ID:', id);
         
+        // Tambahkan kode untuk mencatat data petugas yang memverifikasi
+        const namaPetugas = '{{ Auth::user()->name }}'; // Ambil nama petugas dari user yang login
+        
         $.ajax({
             url: '{{ route("parkir.proses-keluar") }}',
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
-                id: id
+                id: id,
+                verified_by: namaPetugas, // Tambahkan informasi petugas yang memverifikasi
+                verification_method: 'qr_scan' // Tambahkan metode verifikasi
             },
             dataType: 'json',
             beforeSend: function() {
@@ -911,7 +998,10 @@ $('#btnCloseDetail').on('click', function() {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
-                        text: response.message || 'Kendaraan berhasil diproses keluar',
+                        html: `
+                            ${response.message || 'Kendaraan berhasil diproses keluar'}
+                            <div class="small text-muted mt-2">Diverifikasi oleh: ${namaPetugas}</div>
+                        `,
                         confirmButtonColor: '#28a745'
                     }).then(() => {
                         $('#modalTambah').modal('hide');
@@ -1017,27 +1107,53 @@ $('#btnCloseDetail').on('click', function() {
                         return;
                     }
                     
-                    // Tampilkan data kendaraan
-                    selectedKendaraanId = data.id;
-                    $('#noKartu').text(data.nomor_kartu);
-                    $('#platNomor').text(data.plat_nomor);
-                    $('#jenisKendaraan').text(data.jenis_kendaraan);
-                    $('#waktuMasuk').text(moment(data.waktu_masuk).format('DD/MM/YYYY HH:mm:ss'));
-                    $('#hasilPencarian').removeClass('d-none');
                     
-                    // Stop scanner
+                    
+                    // Stop scanner setelah mendapatkan hasil
                     stopScanner();
                     
-                    // Otomatis proses kendaraan keluar
+                    // Tampilkan modal verifikasi dengan data kendaraan
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Kendaraan Ditemukan',
-                        text: 'Kendaraan akan diproses keluar secara otomatis',
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        // Langsung proses keluar setelah scan
-                        prosesKendaraanKeluar(data.id);
+                        icon: 'info',
+                        title: 'Verifikasi Data Kendaraan',
+                        html: `
+                            <div class="text-start">
+                                <p class="mb-1"><strong>Nomor Kartu:</strong> ${data.nomor_kartu}</p>
+                                <p class="mb-1"><strong>Plat Nomor:</strong> ${data.plat_nomor.toUpperCase()}</p>
+                                <p class="mb-1"><strong>Jenis Kendaraan:</strong> ${data.jenis_kendaraan}</p>
+                                <p class="mb-1"><strong>Waktu Masuk:</strong> ${moment(data.waktu_masuk).format('DD/MM/YYYY HH:mm:ss')}</p>
+                            </div>
+                            <div class="alert alert-warning mt-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i> 
+                                Petugas wajib memverifikasi data kendaraan sebelum diproses keluar
+                            </div>
+                            <div class="form-check mt-3 text-start">
+                                <input class="form-check-input" type="checkbox" id="verifikasiPetugas">
+                                <label class="form-check-label" for="verifikasiPetugas">
+                                    Saya telah memverifikasi data kendaraan di atas dengan benar
+                                </label>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Proses Keluar',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false,
+                        preConfirm: () => {
+                            // Periksa apakah checkbox verifikasi dicentang
+                            const verifikasi = document.getElementById('verifikasiPetugas').checked;
+                            if (!verifikasi) {
+                                Swal.showValidationMessage('Verifikasi wajib dilakukan oleh petugas');
+                                return false;
+                            }
+                            return true;
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Proses kendaraan keluar
+                            prosesKendaraanKeluar(data.id);
+                        }
                     });
                 } else {
                     // Kartu tidak ditemukan
@@ -1138,21 +1254,138 @@ $('#btnCloseDetail').on('click', function() {
             return;
         }
 
+        // Ambil data kendaraan dari elemen HTML yang sudah diisi
+        const nomorKartu = $('#noKartu').text();
+        const platNomor = $('#platNomor').text();
+        const jenisKendaraan = $('#jenisKendaraan').text();
+        const waktuMasuk = $('#waktuMasuk').text();
+        
+        // Tampilkan modal verifikasi dengan data kendaraan sama seperti saat scan QR
         Swal.fire({
-            title: 'Konfirmasi',
-            text: 'Apakah Anda yakin ingin memproses kendaraan keluar?',
-            icon: 'question',
+            icon: 'info',
+            title: 'Verifikasi Data Kendaraan',
+            html: `
+                <div class="text-start">
+                    <p class="mb-1"><strong>Nomor Kartu:</strong> ${nomorKartu}</p>
+                    <p class="mb-1"><strong>Plat Nomor:</strong> ${platNomor}</p>
+                    <p class="mb-1"><strong>Jenis Kendaraan:</strong> ${jenisKendaraan}</p>
+                    <p class="mb-1"><strong>Waktu Masuk:</strong> ${waktuMasuk}</p>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i> 
+                    Petugas wajib memverifikasi data kendaraan sebelum diproses keluar
+                </div>
+                <div class="form-check mt-3 text-start">
+                    <input class="form-check-input" type="checkbox" id="verifikasiPetugas">
+                    <label class="form-check-label" for="verifikasiPetugas">
+                        Saya telah memverifikasi data kendaraan di atas dengan benar
+                    </label>
+                </div>
+            `,
             showCancelButton: true,
+            confirmButtonText: 'Proses Keluar',
+            cancelButtonText: 'Batal',
             confirmButtonColor: '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, Proses!',
-            cancelButtonText: 'Batal'
+            allowOutsideClick: false,
+            preConfirm: () => {
+                // Periksa apakah checkbox verifikasi dicentang
+                const verifikasi = document.getElementById('verifikasiPetugas').checked;
+                if (!verifikasi) {
+                    Swal.showValidationMessage('Verifikasi wajib dilakukan oleh petugas');
+                    return false;
+                }
+                return true;
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                prosesKendaraanKeluar(window.selectedKendaraanId);
+                // Proses kendaraan keluar dengan menambahkan informasi metode verifikasi
+                prosesKendaraanKeluarManual(window.selectedKendaraanId);
             }
         });
     });
+
+    // Tambahkan fungsi baru untuk memproses kendaraan keluar secara manual
+    function prosesKendaraanKeluarManual(id) {
+        if (!id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'ID kendaraan tidak valid',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+        
+        console.log('Memproses kendaraan keluar secara manual dengan ID:', id);
+        
+        // Tambahkan kode untuk mencatat data petugas yang memverifikasi
+        const namaPetugas = '{{ Auth::user()->name }}'; // Ambil nama petugas dari user yang login
+        
+        $.ajax({
+            url: '{{ route("parkir.proses-keluar") }}',
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                id: id,
+                verified_by: namaPetugas, // Tambahkan informasi petugas yang memverifikasi
+                verification_method: 'manual_selection' // Tandai bahwa ini verifikasi manual
+            },
+            dataType: 'json',
+            beforeSend: function() {
+                // Tampilkan loading 
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Sedang memproses kendaraan keluar',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(response) {
+                console.log('Respons sukses:', response);
+                
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        html: `
+                            ${response.message || 'Kendaraan berhasil diproses keluar'}
+                            <div class="small text-muted mt-2">Diverifikasi oleh: ${namaPetugas}</div>
+                            <div class="small text-muted">Metode: Pilih Manual</div>
+                        `,
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        $('#modalTambah').modal('hide');
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: response.message || 'Gagal memproses kendaraan keluar',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', xhr, status, error);
+                
+                let errorMessage = 'Terjadi kesalahan sistem';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage,
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        });
+    }
 });
 
 // Toggle dropdown
@@ -1221,11 +1454,23 @@ function selectKendaraan(element) {
     
     // Update vehicle details
     if (id) {
-        $('#noKartu').text(element.getAttribute('data-nomor-kartu'));
-        $('#platNomor').text(element.getAttribute('data-plat-nomor'));
-        $('#jenisKendaraan').text(element.getAttribute('data-jenis-kendaraan'));
-        $('#waktuMasuk').text(moment(element.getAttribute('data-waktu-masuk')).format('DD/MM/YYYY HH:mm:ss'));
+        const nomorKartu = element.getAttribute('data-nomor-kartu');
+        const platNomor = element.getAttribute('data-plat-nomor').toUpperCase();
+        const jenisKendaraan = element.getAttribute('data-jenis-kendaraan');
+        const waktuMasukRaw = element.getAttribute('data-waktu-masuk');
+        const waktuMasuk = moment(waktuMasukRaw).format('DD/MM/YYYY HH:mm:ss');
+        
+        $('#noKartu').text(nomorKartu);
+        $('#platNomor').text(platNomor);
+        $('#jenisKendaraan').text(jenisKendaraan);
+        $('#waktuMasuk').text(waktuMasuk);
         $('#hasilPencarian').removeClass('d-none');
+        
+        // Highlight detail kendaraan dengan efek fade untuk menarik perhatian
+        $('#hasilPencarian').addClass('highlight-effect');
+        setTimeout(() => {
+            $('#hasilPencarian').removeClass('highlight-effect');
+        }, 800);
     } else {
         $('#hasilPencarian').addClass('d-none');
     }

@@ -551,6 +551,132 @@
 <script src="https://unpkg.com/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
 
 <script>
+let html5QrcodeScanner = null;
+let scannerActive = false;
+let scanProcessed = false;  // Flag untuk memastikan scan hanya diproses sekali
+
+function stopScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+        $('#stopButton').hide();
+        $('#startButton').show();
+        scannerActive = false;
+        scanProcessed = false; // Reset flag saat scanner dihentikan
+    }
+}
+
+$(document).ready(function() {
+    // Start Scanner
+    $('#startButton').click(function() {
+        if (html5QrcodeScanner === null) {
+            $('#stopButton').show();
+            $(this).hide();
+            scannerActive = true;
+            scanProcessed = false; // Reset flag saat scanner dimulai
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                }
+            );
+            
+            html5QrcodeScanner.render((decodedText) => {
+                // Hanya proses jika belum diproses sebelumnya dan scanner masih aktif
+                if (!scanProcessed && scannerActive) {
+                    scanProcessed = true; // Set flag agar tidak diproses lagi
+                    
+                    // Cek status kartu melalui AJAX
+                    $.ajax({
+                        url: '{{ route("parkir.check-card") }}',
+                        type: 'POST',
+                        data: {
+                            nomor_kartu: decodedText,
+                            _token: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.is_used) {
+                                // Kartu sedang digunakan
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Kartu Sedang Digunakan',
+                                    text: 'Kartu ini masih digunakan dan belum keluar parkir',
+                                    confirmButtonColor: '#dc3545'
+                                });
+                                stopScanner();
+                            } else {
+                                // Kartu valid dan bisa digunakan
+                                $('#nomor_kartu').val(decodedText);
+                                stopScanner();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: 'Nomor kartu berhasil di-scan: ' + decodedText,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memverifikasi kartu',
+                                confirmButtonColor: '#dc3545'
+                            });
+                            stopScanner();
+                        }
+                    });
+                }
+            }, (errorMessage) => {
+                // Handle error jika diperlukan - tidak perlu menampilkan pesan untuk setiap error scan
+                console.error(`QR Code scanning error: ${errorMessage}`);
+            });
+        }
+    });
+
+    // Stop Scanner
+    $('#stopButton').click(function() {
+        stopScanner();
+    });
+
+    // Reset scanner saat modal ditutup
+    $('#parkirModal').on('hidden.bs.modal', function() {
+        stopScanner();
+    });
+
+    // Validasi input manual
+    $('#nomor_kartu').on('input', function() {
+        let value = this.value;
+        // Validasi saat input manual
+        if (value.length > 0) {
+            $.ajax({
+                url: '{{ route("parkir.check-card") }}',
+                type: 'POST',
+                data: {
+                    nomor_kartu: value,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.is_used) {
+                        $('#nomor_kartu').addClass('is-invalid');
+                        $('#nomor_kartu').next('.invalid-feedback').remove();
+                        $('#nomor_kartu').after('<div class="invalid-feedback">Kartu ini masih digunakan dan belum keluar parkir</div>');
+                    } else {
+                        $('#nomor_kartu').removeClass('is-invalid');
+                        $('#nomor_kartu').next('.invalid-feedback').remove();
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+
+<script>
     $(document).ready(function () {
         // Menampilkan modal saat tombol Tambah diklik
         $('#btnTambah').click(function () {
@@ -716,19 +842,7 @@
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-let html5QrcodeScanner = null;
-
-function stopScanner() {
-    if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear();
-        html5QrcodeScanner = null;
-        $('#stopButton').hide();
-        $('#startButton').show();
-    }
-}
-
 $(document).ready(function() {
-    // Start Scanner
     $('#startButton').click(function() {
         if (html5QrcodeScanner === null) {
             $('#stopButton').show();
@@ -744,9 +858,8 @@ $(document).ready(function() {
             );
             
             html5QrcodeScanner.render((decodedText) => {
-                // Cek status kartu melalui AJAX
                 $.ajax({
-                    url: '{{ route("parkir.check-card") }}',
+                    url: '/parkir/check-card',
                     type: 'POST',
                     data: {
                         nomor_kartu: decodedText,
@@ -754,16 +867,13 @@ $(document).ready(function() {
                     },
                     success: function(response) {
                         if (response.is_used) {
-                            // Kartu sedang digunakan
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Kartu Sedang Digunakan',
                                 text: 'Kartu ini masih digunakan dan belum keluar parkir',
                                 confirmButtonColor: '#dc3545'
                             });
-                            stopScanner();
                         } else {
-                            // Kartu valid dan bisa digunakan
                             $('#nomor_kartu').val(decodedText);
                             stopScanner();
                             Swal.fire({
@@ -779,33 +889,28 @@ $(document).ready(function() {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memverifikasi kartu',
+                            text: 'Terjadi kesalahan saat memverifikasi kartu',
                             confirmButtonColor: '#dc3545'
                         });
-                        stopScanner();
                     }
                 });
             });
         }
     });
 
-    // Stop Scanner
     $('#stopButton').click(function() {
         stopScanner();
     });
 
-    // Reset scanner saat modal ditutup
     $('#parkirModal').on('hidden.bs.modal', function() {
         stopScanner();
     });
 
-    // Validasi input manual
     $('#nomor_kartu').on('input', function() {
         let value = this.value;
-        // Validasi saat input manual
         if (value.length > 0) {
             $.ajax({
-                url: '{{ route("parkir.check-card") }}',
+                url: '/parkir/check-card',
                 type: 'POST',
                 data: {
                     nomor_kartu: value,
@@ -1200,6 +1305,9 @@ $(document).ready(function() {
         $('#startCamera').show();
         $('.captured-image').hide();
     }
+
+    let plateDetectionInProgress = false;
+    let plateDetected = false;
     
     // Fungsi untuk mengambil gambar dan mendeteksi plat (Gunakan raw text)
     function takePicture() {

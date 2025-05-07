@@ -82,7 +82,7 @@
                                             </div>
                                         </div>
                                         <small class="form-text text-muted mt-1">
-                                            <i class="bi bi-info-circle-fill me-1"></i> Contoh: A001, B002, dll.
+                                            <i class="bi bi-info-circle-fill me-1"></i> Contoh: 01, 02, 30, dll.
                                         </small>
                                     </div>
                                     <div class="d-grid gap-2 col-md-6 mx-auto">

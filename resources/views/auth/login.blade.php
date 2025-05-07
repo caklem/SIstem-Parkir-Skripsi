@@ -1,5 +1,7 @@
 @extends('layouts.auth')
 
+@section('title', 'Sipark | Login Sistem Parkir')
+
 @section('content')
 <div class="login-box">
     <div class="login-logo">
@@ -68,6 +70,12 @@
 
 @push('styles')
 <style>
+    .login-page {
+        background: linear-gradient(135deg, #2b4162 0%, #12100e 100%) !important;
+    }
+    .login-logo a {
+        color: #fff;
+    }
     .btn-warning {
         color: #fff;
         background-color: #ffc107;

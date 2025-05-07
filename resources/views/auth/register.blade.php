@@ -1,4 +1,5 @@
 @extends('layouts.auth')
+@section('title', 'Sipark | Register Sistem Parkir')
 
 @section('content')
 <div class="register-box">

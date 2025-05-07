@@ -45,20 +45,22 @@
 <body>
     <div class="header">
         <div class="title">Laporan Parkir Masuk Hotel Golden Hill</div>
-        <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->format('F Y') }}</div>
+        <div class="subtitle">Periode: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('MMMM Y') }}</div>
     </div>
     <table class="table">
         <thead>
             <tr>
+                <th>No</th>
                 <th>No Kartu</th>
                 <th>Plat Nomor</th>
-                <th>Jenis</th>
+                <th>Jenis Kendaraan</th>
                 <th>Waktu Masuk</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($parkirs as $parkir)
+            @foreach($parkirs as $index => $parkir)
                 <tr>
+                    <td>{{ $index + 1}}</td>
                     <td>{{ $parkir->nomor_kartu }}</td>
                     <td>{{ $parkir->plat_nomor }}</td>
                     <td>{{ $parkir->jenis_kendaraan }}</td>

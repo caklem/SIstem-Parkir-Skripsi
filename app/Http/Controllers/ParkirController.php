@@ -60,6 +60,7 @@ class ParkirController extends Controller
         $startDate = null;
         $endDate = null;
 
+        // Tentukan range tanggal berdasarkan filter
         switch ($range) {
             case 'day':
                 $startDate = now()->startOfDay();
@@ -130,13 +131,14 @@ class ParkirController extends Controller
         ->groupBy('jenis_kendaraan')
         ->get();
 
-        // Recent parking history
-        $parkirHistory = ParkirKeluar::orderBy('waktu_keluar', 'desc')
-            ->take(10)
+        // Gunakan filter untuk data table juga
+        $parkirHistory = ParkirKeluar::whereBetween('waktu_masuk', [$startDate, $endDate])
+            ->orderBy('waktu_masuk', 'desc')
+            ->take(50) // Batasi jumlah data
             ->get()
             ->map(function($item) {
                 $masuk = Carbon::parse($item->waktu_masuk);
-                $keluar = Carbon::parse($item->waktu_keluar);
+                $keluar = $item->waktu_keluar ? Carbon::parse($item->waktu_keluar) : now();
                 $item->durasi = $masuk->diffForHumans($keluar, true);
                 return $item;
             });
@@ -145,9 +147,11 @@ class ParkirController extends Controller
             'stats',
             'kendaraanMasukKeluar',
             'jenisKendaraan',
-            'parkirHistory'
+            'parkirHistory',
+            'range',
+            'startDate',
+            'endDate'
         ));
-
     }
 
     private function getKendaraanMasukData($startDate, $endDate)
