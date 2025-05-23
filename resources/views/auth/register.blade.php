@@ -125,3 +125,30 @@
     }
 </style>
 @endpush
+
+@section('styles')
+<style>
+    /* Mengubah corner radius untuk modal register */
+    #registerModal .modal-content {
+        border-radius: 25px !important;
+        overflow: hidden;
+    }
+    
+    #registerModal .modal-header {
+        border-top-left-radius: 25px !important;
+        border-top-right-radius: 25px !important;
+    }
+    
+    #registerModal .modal-footer {
+        border-bottom-left-radius: 25px !important;
+        border-bottom-right-radius: 25px !important;
+    }
+
+    /* Tambahkan ini untuk memastikan konsistensi di semua browser */
+    .modal-content {
+    -webkit-border-radius: 25px !important;
+    -moz-border-radius: 25px !important;
+    border-radius: 25px !important;
+    }
+</style>
+@endsection

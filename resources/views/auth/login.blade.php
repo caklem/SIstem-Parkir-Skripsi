@@ -98,5 +98,29 @@
         color: #e0a800 !important;
         text-decoration: underline;
     }
+    
+    /* Mengubah corner radius untuk modal login */
+    #loginModal .modal-content {
+        border-radius: 25px !important;
+        overflow: hidden;
+    }
+    
+    #loginModal .modal-header {
+        border-top-left-radius: 25px !important;
+        border-top-right-radius: 25px !important;
+    }
+    
+    #loginModal .modal-footer {
+        border-bottom-left-radius: 25px !important;
+        border-bottom-right-radius: 25px !important;
+    }
+
+    /* Tambahkan ini untuk memastikan konsistensi di semua browser */
+    .modal-content {
+    -webkit-border-radius: 25px !important;
+    -moz-border-radius: 25px !important;
+    border-radius: 25px !important; 
+    }
+
 </style>
 @endpush
