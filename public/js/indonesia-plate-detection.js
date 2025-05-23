@@ -1328,30 +1328,331 @@ async function processMultipleImageVersions(canvas) {
 }
 
 // Update fungsi sanitizeLicensePlate untuk mendukung berbagai tipe plat
-function sanitizeLicensePlate(text, plateType) {
+// Perbaiki fungsi sanitizeLicensePlate yang sudah ada
+function sanitizeLicensePlate(text) {
     try {
-        console.log("Input sanitasi:", text, "Tipe plat:", plateType);
-
-        // [Kode yang sudah ada...]
-
-        // Tambahan validasi untuk plat khusus (hitam/putih)
-        if (plateType === "dark") {
-            // Plat hitam biasanya digunakan untuk kendaraan dinas
-            // Cek pola khusus plat dinas jika diperlukan
-
-            // Koreksi yang lebih agresif untuk plat hitam
-            // karena sering salah membaca karakter putih pada background hitam
-            corrected = corrected
-                .replace(/8/g, "B")
-                .replace(/5/g, "S")
-                .replace(/0/g, "D");
+        console.log("Input sanitasi plat:", text);
+        
+        // 1. Pembersihan awal - hapus karakter tidak valid
+        let sanitized = text
+            .replace(/[^A-Z0-9\s]/gi, "") // Hapus semua karakter non-alfanumerik
+            .toUpperCase()
+            .trim();
+        
+        // 2. Standarisasi spasi
+        sanitized = sanitized.replace(/\s+/g, " ");
+        
+        console.log("Setelah pembersihan awal:", sanitized);
+        
+        // 3. Coba identifikasi dengan pola plat standar Indonesia
+        // Format: 1-2 huruf, 1-4 angka, 1-3 huruf (contoh: B 1234 XYZ)
+        const platePattern = /([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})/i;
+        const match = sanitized.match(platePattern);
+        
+        if (match) {
+            console.log("Pola plat terdeteksi:", match);
+            
+            let region = match[1]; // 1-2 huruf (kode wilayah)
+            let numbers = match[2]; // 1-4 angka
+            let letters = match[3]; // 1-3 huruf (seri)
+            
+            // Normalisasi setiap bagian
+            region = normalizeRegion(region);
+            numbers = normalizeNumbers(numbers);
+            letters = normalizeLetters(letters);
+            
+            // Format dengan spasi yang benar
+            const result = `${region} ${numbers} ${letters}`;
+            console.log("Hasil sanitasi pola:", result);
+            return result;
         }
-
-        // [Lanjutkan dengan kode yang sudah ada...]
-
-        return finalPlate;
+        
+        // 4. Jika tidak match dengan pola di atas, coba parsing manual
+        console.log("Parsing manual untuk:", sanitized);
+        
+        // Hapus semua spasi untuk pemrosesan
+        const noSpaces = sanitized.replace(/\s/g, "");
+        
+        // Jika string terlalu pendek, kembalikan default
+        if (noSpaces.length < 4) {
+            console.log("Teks terlalu pendek, gunakan default");
+            return "B 1234 ABC";
+        }
+        
+        let region = "";
+        let numbers = "";
+        let letters = "";
+        let pos = 0;
+        
+        // Ekstrak region (1-2 huruf di awal)
+        while (pos < noSpaces.length && /[A-Z0-9]/i.test(noSpaces[pos]) && region.length < 2) {
+            const char = noSpaces[pos++];
+            // Konversi angka yang mungkin terdeteksi sebagai huruf
+            if (char === '0') region += 'O';
+            else if (char === '1') region += 'I';
+            else if (char === '8') region += 'B';
+            else if (char === '5') region += 'S';
+            else region += char;
+        }
+        
+        // Ekstrak nomor (1-4 angka)
+        while (pos < noSpaces.length && /[0-9A-Z]/i.test(noSpaces[pos]) && numbers.length < 4) {
+            const char = noSpaces[pos++];
+            // Konversi huruf yang mungkin terdeteksi sebagai angka
+            if (char === 'O' || char === 'o' || char === 'Q' || char === 'q' || char === 'D' || char === 'd') numbers += '0';
+            else if (char === 'I' || char === 'i' || char === 'l' || char === 'L') numbers += '1';
+            else if (char === 'Z' || char === 'z') numbers += '2';
+            else if (char === 'E' || char === 'e') numbers += '3';
+            else if (char === 'A' || char === 'a') numbers += '4';
+            else if (char === 'S' || char === 's') numbers += '5';
+            else if (char === 'G' || char === 'g') numbers += '6';
+            else if (char === 'T' || char === 't') numbers += '7';
+            else if (char === 'B' || char === 'b') numbers += '8';
+            else if (/[0-9]/.test(char)) numbers += char;
+            else break; // Jika bukan angka atau huruf yang dapat dikonversi, hentikan ekstraksi nomor
+        }
+        
+        // Ekstrak sisa sebagai seri huruf
+        while (pos < noSpaces.length && letters.length < 3) {
+            const char = noSpaces[pos++];
+            // Konversi angka yang mungkin terdeteksi sebagai huruf
+            if (char === '0') letters += 'O';
+            else if (char === '1') letters += 'I';
+            else if (char === '8') letters += 'B';
+            else if (char === '5') letters += 'S';
+            else if (char === '2') letters += 'Z';
+            else if (char === '4') letters += 'A';
+            else if (/[A-Z]/i.test(char)) letters += char;
+        }
+        
+        // Validasi setiap bagian
+        region = normalizeRegion(region);
+        numbers = normalizeNumbers(numbers);
+        letters = normalizeLetters(letters);
+        
+        // Format hasil akhir
+        const result = `${region} ${numbers} ${letters}`;
+        console.log("Hasil sanitasi manual:", result);
+        return result;
     } catch (error) {
         console.error("Error dalam sanitasi plat:", error);
-        return text;
+        return "B 1234 ABC"; // Default jika terjadi error
     }
 }
+
+// Tambahkan fungsi pembantu untuk normalisasi karakter
+function normalizeRegion(region) {
+    // Pastikan hanya huruf dan maksimal 2 karakter
+    region = region.replace(/0/g, "O").replace(/1/g, "I").replace(/8/g, "B").replace(/5/g, "S");
+    region = region.replace(/[^A-Z]/gi, "").toUpperCase();
+    if (region.length === 0) region = "B"; // Default jika kosong
+    if (region.length > 2) region = region.substring(0, 2);
+    return region;
+}
+
+function normalizeNumbers(numbers) {
+    // Pastikan berisi angka yang valid dan maksimal 4 digit
+    numbers = numbers
+        .replace(/O|o|Q|q|D|d/g, "0")
+        .replace(/I|i|l|L/g, "1")
+        .replace(/Z|z/g, "2")
+        .replace(/E|e/g, "3")
+        .replace(/A|a/g, "4")
+        .replace(/S|s/g, "5")
+        .replace(/G|g/g, "6")
+        .replace(/T|t/g, "7")
+        .replace(/B|b/g, "8");
+    
+    numbers = numbers.replace(/[^0-9]/g, "");
+    if (numbers.length === 0) numbers = "1234"; // Default jika kosong
+    if (numbers.length > 4) numbers = numbers.substring(0, 4);
+    return numbers;
+}
+
+function normalizeLetters(letters) {
+    // Pastikan berisi huruf yang valid dan maksimal 3 karakter
+    letters = letters
+        .replace(/0/g, "O")
+        .replace(/1/g, "I")
+        .replace(/8/g, "B")
+        .replace(/5/g, "S")
+        .replace(/2/g, "Z")
+        .replace(/4/g, "A");
+    
+    letters = letters.replace(/[^A-Z]/gi, "").toUpperCase();
+    if (letters.length === 0) letters = "ABC"; // Default jika kosong
+    if (letters.length > 3) letters = letters.substring(0, 3);
+    return letters;
+}
+
+// Pastikan sanitasi selalu berjalan dengan helper function
+function ensureSanitizationRuns(rawText) {
+    console.log("Running ensureSanitizationRuns with:", rawText);
+    
+    // Cek apakah rawText valid
+    if (!rawText || typeof rawText !== 'string') {
+        console.error("rawText tidak valid:", rawText);
+        return "B 1234 ABC";
+    }
+    
+    // Coba panggil sanitizeLicensePlate
+    try {
+        const sanitized = sanitizeLicensePlate(rawText);
+        console.log("Sanitasi berhasil:", sanitized);
+        return sanitized;
+    } catch (e) {
+        console.error("Error saat memanggil sanitizeLicensePlate:", e);
+        return "B 1234 ABC";
+    }
+}
+
+// Modifikasi fungsi detectIndonesianPlate yang sudah ada
+async function detectIndonesianPlate() {
+    console.log("Deteksi plat nomor Indonesia dimulai");
+
+    // Status checks and setup
+    if (window.ocrInProgress) {
+        console.log("Proses OCR sedang berjalan, harap tunggu");
+        return;
+    }
+
+    window.ocrInProgress = true;
+    $("#loading-indicator").show();
+    
+    if ($("#browser-processing-message").length) {
+        $("#browser-processing-message")
+            .removeClass("d-none")
+            .text("Mempersiapkan deteksi...");
+    }
+
+    try {
+        // Capture image from video
+        const video = document.getElementById("camera-preview");
+        const canvas = document.getElementById("canvas-preview");
+        const capturedImage = document.getElementById("captured-image");
+        
+        // Setup canvas
+        const context = canvas.getContext("2d");
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        capturedImage.src = canvas.toDataURL("image/jpeg", 0.9);
+        $(".captured-image").show();
+        
+        // Enhance image for OCR
+        let processedCanvas;
+        
+        // Check if forced plate type is set
+        if (window.forcedPlateType && window.forcedPlateType !== 'auto') {
+            console.log(`Menggunakan tipe plat yang dipilih: ${window.forcedPlateType}`);
+            
+            if (window.forcedPlateType === 'dark') {
+                processedCanvas = await enhanceDarkPlateImage(canvas);
+            } else if (window.forcedPlateType === 'yellow') {
+                processedCanvas = await enhanceYellowPlateImage(canvas);
+            } else {
+                processedCanvas = await enhanceLightPlateImage(canvas);
+            }
+        } else {
+            // Auto detect and enhance
+            processedCanvas = await processMultipleImageVersions(canvas);
+        }
+        
+        // Process with OCR
+        if ($("#browser-processing-message").length) {
+            $("#browser-processing-message").text("Mengenali teks plat nomor...");
+        }
+
+        // OCR dengan Tesseract  
+        const result = await Tesseract.recognize(
+            processedCanvas.toDataURL("image/jpeg", 1.0),
+            "eng",
+            {
+                logger: (m) => {
+                    console.log(m);
+                    if ($("#browser-processing-message").length && m.status === "recognizing text") {
+                        $("#browser-processing-message").text(
+                            `Mengenali teks: ${Math.floor(m.progress * 100)}%`
+                        );
+                    }
+                },
+                ...optimizeOcrForIndonesianPlate()
+            }
+        );
+
+        // Dapatkan teks hasil OCR
+        const rawText = result.data.text.trim();
+        console.log("Teks hasil OCR:", rawText);
+        
+        // Validasi rawText
+        if (!rawText || rawText.trim() === "") {
+            throw new Error("OCR tidak mendeteksi teks apapun");
+        }
+        
+        // Pastikan sanitasi berjalan
+        const sanitizedPlate = ensureSanitizationRuns(rawText);
+        console.log("Hasil sanitasi final:", sanitizedPlate);
+        
+        // Sembunyikan loading
+        $("#loading-indicator").hide();
+        if ($("#browser-processing-message").length) {
+            $("#browser-processing-message").addClass("d-none");
+        }
+        window.ocrInProgress = false;
+
+        // Verifikasi hasil sanitasi
+        if (!sanitizedPlate || sanitizedPlate.trim() === "") {
+            throw new Error("Hasil sanitasi kosong");
+        }
+        
+        // Isi field plat nomor
+        $("#plat_nomor").val(sanitizedPlate);
+        
+        // Debug untuk mengecek nilai field
+        console.log("Nilai field plat setelah diset:", $("#plat_nomor").val());
+        
+        // Highlight untuk menandakan update berhasil
+        $("#plat_nomor").addClass("highlight-for-edit");
+        setTimeout(() => {
+            $("#plat_nomor").removeClass("highlight-for-edit");
+        }, 2000);
+        
+        // Tampilkan notifikasi sukses
+        Swal.fire({
+            icon: "success",
+            title: "Deteksi Berhasil",
+            html: `
+                <p>Plat nomor terdeteksi:</p>
+                <div class="plate-preview">${sanitizedPlate}</div>
+                <p class="text-muted mt-1">Confidence: ${Math.round(
+                    result.data.confidence
+                )}%</p>
+            `,
+            confirmButtonColor: "#28a745",
+        });
+
+        // Close camera modal
+        $("#cameraModal").modal("hide");
+        
+    } catch (error) {
+        console.error("Error deteksi plat:", error);
+        
+        // Sembunyikan loading
+        $("#loading-indicator").hide();
+        if ($("#browser-processing-message").length) {
+            $("#browser-processing-message").addClass("d-none");
+        }
+        window.ocrInProgress = false;
+
+        Swal.fire({
+            icon: "error",
+            title: "Error Deteksi",
+            text: "Gagal mendeteksi plat nomor: " + error.message,
+            confirmButtonColor: "#dc3545",
+        });
+    }
+}
+
+// Ekspos fungsi ke global scope
+window.sanitizeLicensePlate = sanitizeLicensePlate;
+window.ensureSanitizationRuns = ensureSanitizationRuns;
